@@ -47,6 +47,9 @@ def main():
         help="Scan type (default: full)",
     )
     scan_parser.add_argument("--output", "-o", help="Output file for results")
+    scan_parser.add_argument(
+        "--report", help="Generate an HTML report from the scan results (requires --output)"
+    )
 
     # Discover command
     discover_parser = subparsers.add_parser(
@@ -99,6 +102,17 @@ def main():
             with open(args.output, "w") as f:
                 json.dump(results, f, indent=4)
             print(f"[+] Result saved in {args.output}")
+
+            if args.report:
+                print(f"[*] Generating HTML report to {args.report}...")
+                try:
+                    from reports.report_generator import ReportGenerator
+
+                    report_generator = ReportGenerator({"scan_results": results})
+                    report_generator.generate_html_report(args.report)
+                    print(f"[+] Report generated successfully: {args.report}")
+                except Exception as e:
+                    print(f"[!] Error generating report: {e}")
         else:
             print(json.dumps(results, indent=4))
 
