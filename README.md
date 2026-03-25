@@ -24,7 +24,6 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates Caldera 
 - Nmap (for network scanning)
 - Access to a Caldera server
 
-
 ### Installation Steps
 
 #### 1. Clone the Repository
@@ -101,13 +100,13 @@ OUTPUT_DIR=./reports
 docker exec -it caldera-server /bin/bash
 ```
 
-2. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
+1. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
 
 ```bash
 cat conf/local.yml
 ```
 
-3. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
+1. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
 4.Copy the API key into the `.env` file.
 
 ## 📁 Project Structure
@@ -137,7 +136,6 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 
 - [Caldera Documentation](https://caldera.readthedocs.io/)
 - [Nmap Guide](https://nmap.org/docs.html)
-
 
 ## 📊 Project Status
 
