@@ -3,12 +3,9 @@
 import argparse
 import sys
 import json
+import os
+import threading
 from datetime import datetime
-
-from core.caldera_client import CalderaClient
-from core.scanner import VulnerabilityScanner
-from core.exploiter import Exploiter
-from core.discover import HostDiscoverer
 
 from config.settings import CALDERA_API_KEY, CALDERA_BASE_URL
 
@@ -48,7 +45,8 @@ def main():
     )
     scan_parser.add_argument("--output", "-o", help="Output file for results")
     scan_parser.add_argument(
-        "--report", help="Generate an HTML report from the scan results (requires --output)"
+        "--report",
+        help="Generate an HTML report from the scan results (requires --output)",
     )
 
     # Discover command
@@ -85,6 +83,18 @@ def main():
     )
     caldera_parser.add_argument("--adversary", help="Name of the opponent to use")
 
+    # Web command
+    web_parser = subparsers.add_parser("web", help="Start the web interface")
+    web_parser.add_argument(
+        "--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)"
+    )
+    web_parser.add_argument(
+        "--port", type=int, default=8000, help="Port to bind (default: 8000)"
+    )
+    web_parser.add_argument(
+        "--reload", action="store_true", help="Enable auto-reload for development"
+    )
+
     # ###################################################################
     args = parser.parse_args()
 
@@ -94,6 +104,8 @@ def main():
 
     # Handle Scan Command #1
     if args.command == "scan":
+        from core.scanner import VulnerabilityScanner
+
         print(f"[*] Starting vulnerability scan on {args.target}")
         scanner = VulnerabilityScanner(args.target, scan_type=args.type)
         results = scanner.run()
@@ -118,6 +130,8 @@ def main():
 
     # Handle Discover Command
     elif args.command == "discover":
+        from core.discover import HostDiscoverer
+
         print(f"[*] Discovering hosts on {args.range}")
         discoverer = HostDiscoverer(args.range)
         hosts = discoverer.discover_hosts()
@@ -131,8 +145,9 @@ def main():
 
     # Manage exploitation command #2
     elif args.command == "exploit":
+        from core.exploiter import Exploiter
+
         if args.list:
-            # Create temporary instance to list exploits
             temp_exploiter = Exploiter({})
             exploits = temp_exploiter.list_exploits()
             print("\nAvailable exploits:")
@@ -163,6 +178,8 @@ def main():
 
     # Handle Caldera Command
     elif args.command == "caldera":
+        from core.caldera_client import CalderaClient
+
         if not CALDERA_BASE_URL or not CALDERA_API_KEY:
             print(
                 "Error: It is required to configure CALDERA_BASE_URL and CALDERA_API_KEY in config/settings.py"
@@ -191,6 +208,19 @@ def main():
                 print(f"[+] Operation completed: {results['operation_id']}")
                 print(f"[+] Adversary: {results['adversary']}")
                 print(json.dumps(results, indent=4))
+
+    # Handle Web Command
+    elif args.command == "web":
+        print(f"[*] Starting VulnAnalyzer Web Interface...")
+        print(f"[*] Server running at http://{args.host}:{args.port}")
+        print(f"[*] Dashboard: http://{args.host}:{args.port}/web/dashboard")
+        print(f"[*] API docs: http://{args.host}:{args.port}/docs")
+        print()
+
+        import uvicorn
+        from api.main import app
+
+        uvicorn.run(app, host=args.host, port=args.port, reload=args.reload)
 
 
 if __name__ == "__main__":

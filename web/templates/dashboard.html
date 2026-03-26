@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - VulnAnalyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+    <p class="mb-0">Resumen de análisis de vulnerabilidades</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-stat" style="border-left: 4px solid var(--secondary);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Análisis</h6>
+                        <h3 id="total-scans" class="mb-0">0</h3>
+                    </div>
+                    <div class="stat-icon text-secondary">
+                        <i class="bi bi-search"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stat" style="border-left: 4px solid var(--primary);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Targets Analizados</h6>
+                        <h3 id="total-targets" class="mb-0">0</h3>
+                    </div>
+                    <div class="stat-icon text-primary">
+                        <i class="bi bi-server"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stat" style="border-left: 4px solid var(--critical);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Vulnerabilidades</h6>
+                        <h3 id="total-vulns" class="mb-0">0</h3>
+                    </div>
+                    <div class="stat-icon text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-stat" style="border-left: 4px solid var(--high);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2">Críticas</h6>
+                        <h3 id="critical-count" class="mb-0 text-danger">0</h3>
+                    </div>
+                    <div class="stat-icon text-warning">
+                        <i class="bi bi-exclamation-octagon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Vulnerabilidades por Severidad</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Top 5 Targets Más Vulnerables</h5>
+            </div>
+            <div class="card-body">
+                <div id="top-vulnerable" class="list-group list-group-flush">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass-split"></i> Cargando...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Análisis Recientes</h5>
+                <a href="/web/scans" class="btn btn-sm btn-primary">Ver todos</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Target</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Vulnerabilidades</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-scans">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="bi bi-hourglass-split"></i> Cargando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function loadDashboard() {
+        try {
+            const response = await fetch('/api/scans/stats');
+            const data = await response.json();
+
+            document.getElementById('total-scans').textContent = data.total_scans;
+            document.getElementById('total-targets').textContent = data.total_targets;
+            document.getElementById('total-vulns').textContent = data.total_vulnerabilities;
+            document.getElementById('critical-count').textContent = data.vulnerabilities_by_severity.critical;
+
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Críticas', 'Altas', 'Medias', 'Bajas', 'Info'],
+                    datasets: [{
+                        data: [
+                            data.vulnerabilities_by_severity.critical,
+                            data.vulnerabilities_by_severity.high,
+                            data.vulnerabilities_by_severity.medium,
+                            data.vulnerabilities_by_severity.low,
+                            data.vulnerabilities_by_severity.info
+                        ],
+                        backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#27ae60', '#3498db']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            const topVulnContainer = document.getElementById('top-vulnerable');
+            if (data.top_vulnerable_targets.length === 0) {
+                topVulnContainer.innerHTML = '<div class="text-center text-muted">Sin datos disponibles</div>';
+            } else {
+                topVulnContainer.innerHTML = data.top_vulnerable_targets.map(t =>
+                    `<div class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-server me-2"></i>${t.target}</span>
+                    <span class="badge bg-danger">${t.vulnerabilities}</span>
+                </div>`
+                ).join('');
+            }
+
+            const recentScansContainer = document.getElementById('recent-scans');
+            if (data.recent_scans.length === 0) {
+                recentScansContainer.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sin análisis recientes</td></tr>';
+            } else {
+                recentScansContainer.innerHTML = data.recent_scans.map(scan => `
+                <tr>
+                    <td>${scan.id}</td>
+                    <td><strong>${scan.target}</strong></td>
+                    <td><span class="badge bg-secondary">${scan.scan_type}</span></td>
+                    <td><span class="status-badge status-${scan.status}">${scan.status}</span></td>
+                    <td>${scan.total_vulnerabilities > 0 ? `<span class="text-danger">${scan.total_vulnerabilities}</span>` : '<span class="text-success">0</span>'}</td>
+                    <td>${new Date(scan.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <a href="/web/scans/${scan.id}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+            }
+
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
+
+    loadDashboard();
+</script>
+{% endblock %}

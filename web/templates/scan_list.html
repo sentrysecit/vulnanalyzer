@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Análisis - VulnAnalyzer{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="bi bi-search"></i> Análisis</h1>
+        <p class="mb-0">Historial de análisis de vulnerabilidades</p>
+    </div>
+    <a href="/web/scan/new" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-circle"></i> Nuevo Análisis
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Buscar target</label>
+                        <input type="text" class="form-control" id="search-target"
+                            placeholder="192.168.1.1, example.com...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de scan</label>
+                        <select class="form-select" id="filter-type">
+                            <option value="">Todos</option>
+                            <option value="quick">Quick</option>
+                            <option value="full">Full</option>
+                            <option value="stealth">Stealth</option>
+                            <option value="discover">Discover</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" id="filter-status">
+                            <option value="">Todos</option>
+                            <option value="pending">Pending</option>
+                            <option value="running">Running</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="loadScans(1)">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Target</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Críticas</th>
+                    <th>Altas</th>
+                    <th>Medias</th>
+                    <th>Bajas</th>
+                    <th>Total Vulns</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="scans-table">
+                <tr>
+                    <td colspan="11" class="text-center text-muted py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">Cargando análisis...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav id="pagination" class="d-flex justify-content-center mt-4">
+    </nav>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+
+    async function loadScans(page = 1) {
+        currentPage = page;
+        const target = document.getElementById('search-target').value;
+        const type = document.getElementById('filter-type').value;
+        const status = document.getElementById('filter-status').value;
+
+        let url = `/api/scans?page=${page}&per_page=20`;
+        if (target) url += `&target=${encodeURIComponent(target)}`;
+        if (type) url += `&scan_type=${type}`;
+        if (status) url += `&status=${status}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.getElementById('scans-table');
+
+            if (data.scans.length === 0) {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="text-center text-muted py-5">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-2">No se encontraron análisis</p>
+                    </td>
+                </tr>`;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = data.scans.map(scan => `
+            <tr>
+                <td><strong>#${scan.id}</strong></td>
+                <td><strong>${scan.target}</strong></td>
+                <td><span class="badge bg-secondary">${scan.scan_type}</span></td>
+                <td><span class="status-badge status-${scan.status}">${scan.status}</span></td>
+                <td>${scan.critical_count > 0 ? `<span class="text-danger fw-bold">${scan.critical_count}</span>` : '0'}</td>
+                <td>${scan.high_count > 0 ? `<span class="text-warning fw-bold">${scan.high_count}</span>` : '0'}</td>
+                <td>${scan.medium_count > 0 ? `<span class="text-warning fw-bold">${scan.medium_count}</span>` : '0'}</td>
+                <td>${scan.low_count > 0 ? `<span class="text-success fw-bold">${scan.low_count}</span>` : '0'}</td>
+                <td>${scan.total_vulnerabilities > 0 ? `<span class="text-danger">${scan.total_vulnerabilities}</span>` : '<span class="text-success">0</span>'}</td>
+                <td>${new Date(scan.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="/web/scans/${scan.id}" class="btn btn-outline-primary" title="Ver detalle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="/api/reports/${scan.id}/html" class="btn btn-outline-success" title="Ver reporte" target="_blank">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </a>
+                        <button onclick="deleteScan(${scan.id})" class="btn btn-outline-danger" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+            renderPagination(data.total, data.page, data.per_page);
+
+        } catch (error) {
+            console.error('Error loading scans:', error);
+            document.getElementById('scans-table').innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center text-danger py-5">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                    <p class="mt-2">Error al cargar los análisis</p>
+                </td>
+            </tr>`;
+        }
+    }
+
+    function renderPagination(total, page, perPage) {
+        const totalPages = Math.ceil(total / perPage);
+        const pagination = document.getElementById('pagination');
+
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = '<ul class="pagination">';
+
+        html += `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="loadScans(${page - 1}); return false;">Anterior</a>
+    </li>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
+                html += `<li class="page-item ${i === page ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadScans(${i}); return false;">${i}</a>
+            </li>`;
+            } else if (i === page - 3 || i === page + 3) {
+                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+
+        html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="loadScans(${page + 1}); return false;">Siguiente</a>
+    </li>`;
+
+        html += '</ul>';
+        pagination.innerHTML = html;
+    }
+
+    async function deleteScan(id) {
+        if (!confirm('¿Estás seguro de eliminar este análisis?')) return;
+
+        try {
+            const response = await fetch(`/api/scans/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                loadScans(currentPage);
+            }
+        } catch (error) {
+            console.error('Error deleting scan:', error);
+        }
+    }
+
+    document.getElementById('search-target').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') loadScans(1);
+    });
+
+    loadScans(1);
+</script>
+{% endblock %}

@@ -54,6 +54,7 @@ python3 main.py scan 192.168.1.10
 ```
 
 ### Scan Types
+
 You can specify the scan type using the `--type` option:
 
 - `quick`: A quick scan of the most common ports.

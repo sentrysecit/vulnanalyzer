@@ -5,3 +5,8 @@ python-dotenv
 beautifulsoup4
 Jinja2==3.1.6
 webencodings==0.5.1
+weasyprint
+fastapi
+uvicorn
+sqlalchemy
+pydantic
