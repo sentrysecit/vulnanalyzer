@@ -154,10 +154,12 @@ pyrightconfig.json
 
 # Local Tools
 tools/
-GEMINI.md
 
 # Local Testing
 testing
 
 # File tmp
 tmp
+
+# data
+data

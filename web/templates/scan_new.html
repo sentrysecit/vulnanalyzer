@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Análisis - VulnAnalyzer{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/web/dashboard">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/web/scans">Análisis</a></li>
+        <li class="breadcrumb-item active">Nuevo Análisis</li>
+    </ol>
+</nav>
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle"></i> Nuevo Análisis</h1>
+    <p class="mb-0">Iniciar un nuevo escaneo de vulnerabilidades</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form id="scan-form">
+                    <div class="mb-4">
+                        <label class="form-label">Target <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="target"
+                            placeholder="192.168.1.1, example.com, 10.0.0.0/24" required>
+                        <div class="form-text">Dirección IP, dominio o rango de red (CIDR)</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Tipo de Análisis <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg" id="scan-type" required>
+                            <option value="full" selected>Análisis Completo (Full)</option>
+                            <option value="quick">Análisis Rápido (Quick)</option>
+                            <option value="stealth">Análisis Sigiloso (Stealth)</option>
+                        </select>
+                        <div class="form-text">
+                            <strong>Quick:</strong> Puertos comunes |
+                            <strong>Full:</strong> Todos los puertos + detección de SO |
+                            <strong>Stealth:</strong> Escaneo lento y sigiloso
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                            <i class="bi bi-play-fill"></i> Iniciar Análisis
+                        </button>
+                    </div>
+                </form>
+
+                <div id="loading" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Iniciando análisis...</p>
+                </div>
+
+                <div id="result" class="mt-4 d-none">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('scan-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const target = document.getElementById('target').value.trim();
+        const scanType = document.getElementById('scan-type').value;
+
+        if (!target) {
+            alert('Por favor ingresa un target');
+            return;
+        }
+
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('loading').classList.remove('d-none');
+        document.getElementById('result').classList.add('d-none');
+
+        try {
+            const response = await fetch('/api/scans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target, scan_type: scanType })
+            });
+
+            const data = await response.json();
+
+            document.getElementById('loading').classList.add('d-none');
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('d-none');
+
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="bi bi-check-circle"></i> Análisis creado exitosamente</h5>
+                    <p class="mb-2">ID del scan: <strong>#${data.id}</strong></p>
+                    <p class="mb-3">Target: <strong>${data.target}</strong></p>
+                    <div class="d-flex gap-2">
+                        <a href="/web/scans/${data.id}" class="btn btn-primary">
+                            <i class="bi bi-eye"></i> Ver Detalle
+                        </a>
+                        <a href="/web/scans" class="btn btn-outline-secondary">
+                            <i class="bi bi-list"></i> Ver Todos
+                        </a>
+                    </div>
+                </div>
+            `;
+
+                document.getElementById('target').value = '';
+            } else {
+                resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Error</h5>
+                    <p>${data.detail || 'No se pudo crear el análisis'}</p>
+                </div>
+            `;
+            }
+
+        } catch (error) {
+            document.getElementById('loading').classList.add('d-none');
+            document.getElementById('result').classList.remove('d-none');
+            document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                <h5><i class="bi bi-exclamation-triangle"></i> Error de conexión</h5>
+                <p>No se pudo conectar con el servidor. Verifica que esté corriendo.</p>
+            </div>
+        `;
+        }
+
+        document.getElementById('submit-btn').disabled = false;
+    });
+</script>
+{% endblock %}

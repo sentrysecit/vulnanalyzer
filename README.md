@@ -12,7 +12,10 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates Caldera 
 🔍 Automated vulnerability analysis
 🔗 Integration with Caldera for security operations
 🛡️ Scanning with Nmap
-📊 Detailed report generation
+📊 Detailed report generation (HTML, JSON)
+🌐 Web interface with dashboard and reports viewer
+🔌 REST API for integration with other tools
+💾 SQLite database for persistent storage
 🐍 Developed in Python
 🔧 Flexible configuration using environment variables
 
@@ -113,17 +116,24 @@ cat conf/local.yml
 
 ```
 vulnanalyzer/
-├── config/
-├── core/
-├── modules/
-├── reports/
-├── cli/
-├── .env
-├── .gitingnore
-├── .docker-compose.yml
-├── LICENSE
-├── main.py
-├── README.md
+├── api/                  # FastAPI application
+│   ├── routers/          # API endpoints
+│   ├── models.py         # Database models
+│   ├── schemas.py        # Pydantic schemas
+│   └── database.py       # SQLite configuration
+├── config/               # Application settings
+├── core/                 # Core functionality
+│   ├── scanner.py        # Vulnerability scanner
+│   ├── discover.py       # Host discovery
+│   ├── exploiter.py      # Exploit execution
+│   └── caldera_client.py # Caldera integration
+├── docs/                 # Documentation
+├── modules/              # Fingerprints and modules
+├── reports/              # Report generation
+├── services/             # Business logic services
+├── web/                  # Web interface
+│   └── templates/        # HTML templates
+├── main.py               # CLI entry point
 ├── requirements.txt
 └── setup.sh
 ```
@@ -142,9 +152,32 @@ This project is licensed under the MIT License. See the `LICENSE` file for more 
 - ✅ Basic installation and configuration
 - ✅ Caldera integration
 - ✅ Nmap integration
-- 🔄 Report generation
-- 🔄 Web interface
-- 🔄 REST API
+- ✅ Report generation (HTML, JSON)
+- ✅ Web interface with dashboard
+- ✅ REST API
+- ✅ SQLite database for storage
+
+---
+
+## 📚 Documentation
+
+- [Manual de Uso](./docs/01_usage.md) - Guía básica de uso de CLI
+- [Interfaz Web y API](./docs/02_web_interface.md) - Guía completa de la interfaz web y API REST
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# CLI Usage
+python main.py scan 192.168.1.10 --type full
+
+# Start Web Interface
+python main.py web
+
+# Access at http://localhost:8000/web/dashboard
+```
 
 ---
 
