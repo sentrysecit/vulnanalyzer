@@ -1,137 +1,212 @@
 {% extends "base.html" %}
 
-{% block title %}Nuevo Análisis - VulnAnalyzer{% endblock %}
+{% block title %}New Scan - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/web/dashboard">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="/web/scans">Análisis</a></li>
-        <li class="breadcrumb-item active">Nuevo Análisis</li>
-    </ol>
-</nav>
-
-<div class="page-header">
-    <h1><i class="bi bi-plus-circle"></i> Nuevo Análisis</h1>
-    <p class="mb-0">Iniciar un nuevo escaneo de vulnerabilidades</p>
+<!-- Page Header -->
+<div class="animate-in">
+    <h1 class="page-title">New Scan</h1>
+    <p class="page-subtitle">Configure and launch a vulnerability assessment</p>
 </div>
 
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-body">
-                <form id="scan-form">
-                    <div class="mb-4">
-                        <label class="form-label">Target <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control form-control-lg" id="target"
-                            placeholder="192.168.1.1, example.com, 10.0.0.0/24" required>
-                        <div class="form-text">Dirección IP, dominio o rango de red (CIDR)</div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Tipo de Análisis <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-lg" id="scan-type" required>
-                            <option value="full" selected>Análisis Completo (Full)</option>
-                            <option value="quick">Análisis Rápido (Quick)</option>
-                            <option value="stealth">Análisis Sigiloso (Stealth)</option>
-                        </select>
-                        <div class="form-text">
-                            <strong>Quick:</strong> Puertos comunes |
-                            <strong>Full:</strong> Todos los puertos + detección de SO |
-                            <strong>Stealth:</strong> Escaneo lento y sigiloso
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
-                            <i class="bi bi-play-fill"></i> Iniciar Análisis
-                        </button>
-                    </div>
-                </form>
-
-                <div id="loading" class="text-center py-4 d-none">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-3">Iniciando análisis...</p>
-                </div>
-
-                <div id="result" class="mt-4 d-none">
+<div style="max-width: 680px;">
+    <!-- Target Card -->
+    <div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <span>🎯</span>
+                Target Configuration
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                    Target Address
+                </label>
+                <input type="text" class="form-input" id="target" 
+                       placeholder="192.168.1.1, example.com, 10.0.0.0/24"
+                       style="font-size: 16px; padding: 16px;">
+                <div style="font-size: 13px; color: var(--text-tertiary); margin-top: 8px;">
+                    Enter an IP address, domain name, or network range in CIDR notation
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Scan Type Card -->
+    <div class="card animate-in" style="animation-delay: 0.15s; margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <span>⚡</span>
+                Scan Type
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <label class="scan-option" style="
+                    display: block;
+                    padding: 20px;
+                    background: var(--bg-primary);
+                    border: 2px solid var(--border-light);
+                    border-radius: var(--radius-md);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    text-align: center;
+                " onclick="selectScanType('quick', this)">
+                    <input type="radio" name="scan_type" value="quick" style="display: none;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">⚡</div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Quick</div>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Common ports only</div>
+                </label>
+                
+                <label class="scan-option selected" style="
+                    display: block;
+                    padding: 20px;
+                    background: var(--accent-blue-light);
+                    border: 2px solid var(--accent-blue);
+                    border-radius: var(--radius-md);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    text-align: center;
+                " onclick="selectScanType('full', this)">
+                    <input type="radio" name="scan_type" value="full" checked style="display: none;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Full</div>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">All ports + OS</div>
+                </label>
+                
+                <label class="scan-option" style="
+                    display: block;
+                    padding: 20px;
+                    background: var(--bg-primary);
+                    border: 2px solid var(--border-light);
+                    border-radius: var(--radius-md);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    text-align: center;
+                " onclick="selectScanType('stealth', this)">
+                    <input type="radio" name="scan_type" value="stealth" style="display: none;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">👻</div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Stealth</div>
+                    <div style="font-size: 12px; color: var(--text-tertiary);">Slow, undetected</div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button class="btn btn-primary animate-in" style="animation-delay: 0.2s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn" onclick="submitScan()">
+        <span>🚀</span> Launch Scan
+    </button>
+
+    <!-- Result -->
+    <div id="result" style="display: none; margin-top: 24px;"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<style>
+.scan-option:hover {
+    border-color: var(--accent-blue) !important;
+    background: var(--accent-blue-light) !important;
+}
+
+.scan-option.selected {
+    border-color: var(--accent-blue);
+    background: var(--accent-blue-light);
+}
+</style>
+
 <script>
-    document.getElementById('scan-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
+let selectedScanType = 'full';
 
-        const target = document.getElementById('target').value.trim();
-        const scanType = document.getElementById('scan-type').value;
+function selectScanType(type, element) {
+    selectedScanType = type;
+    document.querySelectorAll('.scan-option').forEach(el => {
+        el.classList.remove('selected');
+        el.style.background = 'var(--bg-primary)';
+        el.style.borderColor = 'var(--border-light)';
+    });
+    element.classList.add('selected');
+    element.style.background = 'var(--accent-blue-light)';
+    element.style.borderColor = 'var(--accent-blue)';
+    element.querySelector('input').checked = true;
+}
 
-        if (!target) {
-            alert('Por favor ingresa un target');
-            return;
-        }
-
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('loading').classList.remove('d-none');
-        document.getElementById('result').classList.add('d-none');
-
-        try {
-            const response = await fetch('/api/scans', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ target, scan_type: scanType })
-            });
-
-            const data = await response.json();
-
-            document.getElementById('loading').classList.add('d-none');
-
-            const resultDiv = document.getElementById('result');
-            resultDiv.classList.remove('d-none');
-
-            if (response.ok) {
-                resultDiv.innerHTML = `
-                <div class="alert alert-success">
-                    <h5><i class="bi bi-check-circle"></i> Análisis creado exitosamente</h5>
-                    <p class="mb-2">ID del scan: <strong>#${data.id}</strong></p>
-                    <p class="mb-3">Target: <strong>${data.target}</strong></p>
-                    <div class="d-flex gap-2">
-                        <a href="/web/scans/${data.id}" class="btn btn-primary">
-                            <i class="bi bi-eye"></i> Ver Detalle
-                        </a>
-                        <a href="/web/scans" class="btn btn-outline-secondary">
-                            <i class="bi bi-list"></i> Ver Todos
-                        </a>
+async function submitScan() {
+    const target = document.getElementById('target').value.trim();
+    
+    if (!target) {
+        alert('Please enter a target');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const resultDiv = document.getElementById('result');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Launching...';
+    resultDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/scans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target, scan_type: selectedScanType })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="card" style="border-color: var(--accent-green);">
+                    <div class="card-body" style="padding: 28px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span style="font-size: 40px;">✅</span>
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Scan Initiated</div>
+                                <div class="text-mono" style="color: var(--accent-blue);">Target: ${data.target}</div>
+                                <div class="text-mono" style="color: var(--text-secondary); font-size: 13px;">Scan ID: #${data.id}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <a href="/web/scans/${data.id}" class="btn btn-primary">View Progress</a>
+                            <a href="/web/scans" class="btn btn-secondary">All Scans</a>
+                        </div>
                     </div>
                 </div>
             `;
-
-                document.getElementById('target').value = '';
-            } else {
-                resultDiv.innerHTML = `
-                <div class="alert alert-danger">
-                    <h5><i class="bi bi-exclamation-triangle"></i> Error</h5>
-                    <p>${data.detail || 'No se pudo crear el análisis'}</p>
+            document.getElementById('target').value = '';
+        } else {
+            throw new Error(data.detail || 'Failed to create scan');
+        }
+        
+    } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div class="card" style="border-color: var(--accent-red);">
+                <div class="card-body" style="padding: 28px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <span style="font-size: 40px;">❌</span>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: var(--accent-red); margin-bottom: 4px;">Error</div>
+                            <div style="color: var(--text-secondary);">${error.message}</div>
+                        </div>
+                    </div>
                 </div>
-            `;
-            }
-
-        } catch (error) {
-            document.getElementById('loading').classList.add('d-none');
-            document.getElementById('result').classList.remove('d-none');
-            document.getElementById('result').innerHTML = `
-            <div class="alert alert-danger">
-                <h5><i class="bi bi-exclamation-triangle"></i> Error de conexión</h5>
-                <p>No se pudo conectar con el servidor. Verifica que esté corriendo.</p>
             </div>
         `;
-        }
-
-        document.getElementById('submit-btn').disabled = false;
-    });
+    }
+    
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span>🚀</span> Launch Scan';
+}
 </script>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}

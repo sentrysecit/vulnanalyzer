@@ -6,11 +6,8 @@ from jinja2 import Environment, FileSystemLoader
 class ReportService:
     def __init__(self):
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        template_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "reports",
-            "templates",
-        )
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        template_dir = os.path.join(base_dir, "web", "templates")
         self.env = Environment(loader=FileSystemLoader(template_dir))
 
     def generate_summary(self, data: dict) -> dict:
@@ -77,14 +74,16 @@ class ReportService:
 
         return summary
 
-    def generate_html_from_data(self, data: dict, title: str = "Reporte de Análisis") -> str:
-        template = self.env.get_template("report_template.html")
+    def generate_html_from_data(self, data: dict, title: str = "Reporte de Análisis", context: dict = None) -> str:
+        template = self.env.get_template("reports/view.html")
 
-        context = {
+        ctx = {
             "title": title,
             "timestamp": self.timestamp,
             "data": data,
             "summary": self.generate_summary(data),
         }
+        if context:
+            ctx.update(context)
 
-        return template.render(**context)
+        return template.render(**ctx)

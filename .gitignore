@@ -163,3 +163,8 @@ tmp
 
 # data
 data
+
+# Agents
+.agents
+skills-lock.json
+AGENTS.md

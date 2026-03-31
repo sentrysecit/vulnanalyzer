@@ -1,35 +1,97 @@
 {% extends "base.html" %}
 
-{% block title %}Reporte #{{ scan_id }} - VulnAnalyzer{% endblock %}
+{% block title %}Report #{{ scan_id }} - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/web/dashboard">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="/web/scans">Análisis</a></li>
-        <li class="breadcrumb-item"><a href="/web/scans/{{ scan_id }}">#{{ scan_id }}</a></li>
-        <li class="breadcrumb-item active">Reporte</li>
-    </ol>
-</nav>
-
-<div class="page-header d-flex justify-content-between align-items-center">
+<!-- Page Header -->
+<div class="animate-in"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h1><i class="bi bi-file-earmark-text"></i> Reporte de Análisis</h1>
-        <p class="mb-0">Visualización del reporte de vulnerabilidades</p>
+        <h1 class="page-title">Report</h1>
+        <p class="page-subtitle">Scan #{{ scan_id }} vulnerability analysis</p>
     </div>
-    <div>
-        <button onclick="window.print()" class="btn btn-outline-primary">
-            <i class="bi bi-printer"></i> Imprimir
+    <div style="display: flex; gap: 12px;">
+        <button onclick="window.print()" class="btn btn-secondary">
+            <span>🖨️</span> Print
         </button>
-        <a href="/api/reports/{{ scan_id }}/download/html" class="btn btn-primary">
-            <i class="bi bi-download"></i> Descargar
+        <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-secondary">
+            <span>⬇</span> JSON
         </a>
     </div>
 </div>
 
-<iframe id="report-frame" src="/api/reports/{{ scan_id }}/html"
-    style="width: 100%; height: 800px; border: 1px solid #ddd; border-radius: 8px;"></iframe>
+<!-- Scan Info Bar -->
+<div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
+    <div class="card-body"
+        style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;">
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div>
+                <div
+                    style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 2px;">
+                    Target</div>
+                <div class="text-mono" id="report-target" style="font-weight: 600;">Loading...</div>
+            </div>
+            <div>
+                <div
+                    style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 2px;">
+                    Status</div>
+                <span class="badge badge-gray" id="report-status">Loading...</span>
+            </div>
+            <div>
+                <div
+                    style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 2px;">
+                    Vulnerabilities</div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="badge badge-red" id="report-critical">0</span>
+                    <span class="badge badge-orange" id="report-high">0</span>
+                    <span class="badge badge-gray" id="report-total">0</span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="/web/scans/{{ scan_id }}" class="btn btn-secondary">
+                View Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Report Preview -->
+<div class="card animate-in" style="animation-delay: 0.2s; padding: 0; overflow: hidden;">
+    <iframe id="report-frame" src="/api/reports/{{ scan_id }}/preview"
+        style="width: 100%; height: 900px; border: none;">
+    </iframe>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    async function loadReportInfo() {
+        try {
+            const response = await fetch('/api/scans/{{ scan_id }}');
+            if (!response.ok) throw new Error('Scan not found');
+
+            const scan = await response.json();
+
+            document.getElementById('report-target').textContent = scan.target;
+
+            const statusEl = document.getElementById('report-status');
+            statusEl.textContent = scan.status;
+            statusEl.className = 'badge badge-' + (
+                scan.status === 'completed' ? 'green' :
+                    scan.status === 'failed' ? 'red' :
+                        scan.status === 'running' ? 'blue' : 'gray'
+            );
+
+            document.getElementById('report-critical').textContent = scan.critical_count;
+            document.getElementById('report-high').textContent = scan.high_count;
+            document.getElementById('report-total').textContent = scan.total_vulnerabilities;
+
+        } catch (error) {
+            console.error('Error loading report info:', error);
+        }
+    }
+
+    loadReportInfo();
+</script>
 {% endblock %}

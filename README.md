@@ -9,15 +9,15 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates Caldera 
 
 ## ✨ Features
 
-🔍 Automated vulnerability analysis
-🔗 Integration with Caldera for security operations
-🛡️ Scanning with Nmap
-📊 Detailed report generation (HTML, JSON)
-🌐 Web interface with dashboard and reports viewer
-🔌 REST API for integration with other tools
-💾 SQLite database for persistent storage
-🐍 Developed in Python
-🔧 Flexible configuration using environment variables
+🔍 Automated vulnerability analysis <br>
+🔗 Integration with Caldera for security operations <br>
+🛡️ Scanning with Nmap <br>
+📊 Detailed report generation (HTML, JSON) <br>
+🌐 Web interface with dashboard and reports viewer <br>
+🔌 REST API for integration with other tools <br>
+💾 SQLite database for persistent storage <br>
+🐍 Developed in Python <br>
+🔧 Flexible configuration using environment variables <br>
 
 ## 🚀  Installation
 

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or "Vulnerability Report" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --bg-tertiary: #fafafa;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --text-tertiary: #6e6e73;
+            --accent-blue: #0071e3;
+            --accent-blue-light: #e8f4fd;
+            --accent-green: #34c759;
+            --accent-green-light: #e8f8ed;
+            --accent-orange: #ff9500;
+            --accent-orange-light: #fff4e5;
+            --accent-red: #ff3b30;
+            --accent-red-light: #ffecec;
+            --accent-purple: #af52de;
+            --accent-purple-light: #f5e8ff;
+            --border-light: rgba(0, 0, 0, 0.06);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --font-display: 'DM Serif Display', serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .report-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .report-header {
+            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
+            color: white;
+            padding: 48px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .report-header>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .report-logo-icon {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .report-logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .report-title {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 24px;
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .report-meta-item {
+            font-size: 14px;
+        }
+
+        .report-meta-label {
+            opacity: 0.7;
+            margin-right: 8px;
+        }
+
+        .report-meta-value {
+            font-weight: 500;
+        }
+
+        /* Content */
+        .report-content {
+            background: white;
+            padding: 40px 48px;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 20px 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+
+        .summary-card.total {
+            grid-column: span 2;
+            background: var(--accent-blue-light);
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card.critical .summary-value {
+            color: var(--accent-red);
+        }
+
+        .summary-card.high .summary-value {
+            color: var(--accent-orange);
+        }
+
+        .summary-card.medium .summary-value {
+            color: #ffcc00;
+        }
+
+        .summary-card.low .summary-value {
+            color: var(--accent-green);
+        }
+
+        .summary-card.total .summary-value {
+            color: var(--accent-blue);
+        }
+
+        /* Sections */
+        .report-section {
+            margin-bottom: 40px;
+        }
+
+        .report-section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Host Card */
+        .host-card {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .host-header {
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .host-name {
+            font-family: 'DM Sans', monospace;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .host-status {
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .host-status.up {
+            background: var(--accent-green-light);
+            color: var(--accent-green);
+        }
+
+        .host-status.down {
+            background: var(--accent-red-light);
+            color: var(--accent-red);
+        }
+
+        .host-body {
+            padding: 20px;
+        }
+
+        /* Ports */
+        .ports-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .port-item {
+            padding: 8px 14px;
+            background: white;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            border: 1px solid var(--border-light);
+        }
+
+        .port-number {
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .port-service {
+            color: var(--text-secondary);
+            margin-left: 6px;
+        }
+
+        /* Vulnerabilities */
+        .vuln-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .vuln-item {
+            padding: 16px;
+            background: white;
+            border-radius: var(--radius-md);
+            border-left: 4px solid;
+        }
+
+        .vuln-item.critical {
+            border-left-color: var(--accent-red);
+        }
+
+        .vuln-item.high {
+            border-left-color: var(--accent-orange);
+        }
+
+        .vuln-item.medium {
+            border-left-color: #ffcc00;
+        }
+
+        .vuln-item.low {
+            border-left-color: var(--accent-green);
+        }
+
+        .vuln-item.info {
+            border-left-color: var(--accent-blue);
+        }
+
+        .vuln-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .vuln-type {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .vuln-severity {
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .vuln-severity.critical {
+            background: var(--accent-red-light);
+            color: var(--accent-red);
+        }
+
+        .vuln-severity.high {
+            background: var(--accent-orange-light);
+            color: var(--accent-orange);
+        }
+
+        .vuln-severity.medium {
+            background: #fff8e5;
+            color: #cc7700;
+        }
+
+        .vuln-severity.low {
+            background: var(--accent-green-light);
+            color: var(--accent-green);
+        }
+
+        .vuln-severity.info {
+            background: var(--accent-blue-light);
+            color: var(--accent-blue);
+        }
+
+        .vuln-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .vuln-recommendation {
+            font-size: 13px;
+            color: var(--accent-green);
+            background: var(--accent-green-light);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Empty state */
+        .no-vulns {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent-green);
+        }
+
+        .no-vulns-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+            border-top: 1px solid var(--border-light);
+            margin-top: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-card.total {
+                grid-column: span 2;
+            }
+
+            .report-content {
+                padding: 24px;
+            }
+
+            .report-header {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="report-logo">
+                <div class="report-logo-icon">🛡️</div>
+                <span class="report-logo-text">VulnAnalyzer</span>
+            </div>
+            <h1 class="report-title">{{ title }}</h1>
+            <p class="report-subtitle">Comprehensive vulnerability analysis report</p>
+
+            <div class="report-meta">
+                <div class="report-meta-item">
+                    <span class="report-meta-label">Target:</span>
+                    <span class="report-meta-value">{{ scan.target }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="report-meta-label">Scan Type:</span>
+                    <span class="report-meta-value">{{ scan.scan_type|upper }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="report-meta-label">Date:</span>
+                    <span class="report-meta-value">{{ scan.created_at.strftime('%Y-%m-%d %H:%M') if scan.created_at
+                        else 'N/A' }}</span>
+                </div>
+                <div class="report-meta-item">
+                    <span class="report-meta-label">Status:</span>
+                    <span class="report-meta-value">{{ scan.status|upper }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="report-content">
+            <!-- Summary -->
+            <div class="summary-grid">
+                <div class="summary-card total">
+                    <div class="summary-value">{{ summary.total_vulnerabilities }}</div>
+                    <div class="summary-label">Total Issues</div>
+                </div>
+                <div class="summary-card critical">
+                    <div class="summary-value">{{ summary.severity_counts.critical }}</div>
+                    <div class="summary-label">Critical</div>
+                </div>
+                <div class="summary-card high">
+                    <div class="summary-value">{{ summary.severity_counts.high }}</div>
+                    <div class="summary-label">High</div>
+                </div>
+                <div class="summary-card medium">
+                    <div class="summary-value">{{ summary.severity_counts.medium }}</div>
+                    <div class="summary-label">Medium</div>
+                </div>
+                <div class="summary-card low">
+                    <div class="summary-value">{{ summary.severity_counts.low }}</div>
+                    <div class="summary-label">Low</div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            {% if scan.results %}
+            {% for host, host_data in scan.results.items() %}
+            <div class="report-section">
+                <h2 class="report-section-title">
+                    🖥️ {{ host }}
+                    <span class="host-status {{ host_data.status }}">{{ host_data.status }}</span>
+                </h2>
+
+                <!-- Ports -->
+                {% if host_data.ports %}
+                <div class="ports-grid">
+                    {% for port, port_data in host_data.ports.items() %}
+                    <div class="port-item">
+                        <span class="port-number">{{ port }}</span>
+                        <span class="port-service">{{ port_data.service }}{% if port_data.version %} {{
+                            port_data.version }}{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Vulnerabilities -->
+                {% if host_data.vulnerabilities %}
+                <div class="vuln-list">
+                    {% for vuln in host_data.vulnerabilities %}
+                    <div class="vuln-item {{ vuln.severity or 'info' }}">
+                        <div class="vuln-header">
+                            <span class="vuln-type">{{ vuln.type or 'Unknown' }}</span>
+                            <span class="vuln-severity {{ vuln.severity or 'info' }}">{{ vuln.severity or 'info'
+                                }}</span>
+                        </div>
+                        <p class="vuln-description">{{ vuln.description or 'No description available' }}</p>
+                        {% if vuln.recommendation %}
+                        <div class="vuln-recommendation">💡 {{ vuln.recommendation }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-vulns">
+                    <div class="no-vulns-icon">✓</div>
+                    <div>No vulnerabilities detected on this host</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="no-vulns">
+                <div class="no-vulns-icon">📋</div>
+                <div>No scan results available</div>
+            </div>
+            {% endif %}
+
+            <!-- Footer -->
+            <div class="report-footer">
+                Generated by VulnAnalyzer | Confidential - For internal use only
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

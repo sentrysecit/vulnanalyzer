@@ -3,79 +3,90 @@
 {% block title %}Dashboard - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
-    <p class="mb-0">Resumen de análisis de vulnerabilidades</p>
+<!-- Page Header -->
+<div class="animate-in">
+    <h1 class="page-title">Security Dashboard</h1>
+    <p class="page-subtitle">Monitor and manage your vulnerability assessments</p>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card card-stat" style="border-left: 4px solid var(--secondary);">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-2">Total Análisis</h6>
-                        <h3 id="total-scans" class="mb-0">0</h3>
-                    </div>
-                    <div class="stat-icon text-secondary">
-                        <i class="bi bi-search"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Stats Grid -->
+<div class="stat-grid">
+    <div class="stat-card blue animate-in animate-in-delay-1">
+        <div class="stat-icon blue">🔍</div>
+        <div class="stat-value text-mono" id="total-scans">0</div>
+        <div class="stat-label">Total Scans</div>
+        <div class="stat-trend up">↑ 100% completed</div>
     </div>
-    <div class="col-md-3">
-        <div class="card card-stat" style="border-left: 4px solid var(--primary);">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-2">Targets Analizados</h6>
-                        <h3 id="total-targets" class="mb-0">0</h3>
-                    </div>
-                    <div class="stat-icon text-primary">
-                        <i class="bi bi-server"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
+    <div class="stat-card green animate-in animate-in-delay-2">
+        <div class="stat-icon green">🎯</div>
+        <div class="stat-value text-mono" id="total-targets">0</div>
+        <div class="stat-label">Targets Scanned</div>
+        <div class="stat-trend" style="color: var(--text-tertiary);">Unique hosts</div>
     </div>
-    <div class="col-md-3">
-        <div class="card card-stat" style="border-left: 4px solid var(--critical);">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-2">Total Vulnerabilidades</h6>
-                        <h3 id="total-vulns" class="mb-0">0</h3>
-                    </div>
-                    <div class="stat-icon text-danger">
-                        <i class="bi bi-exclamation-triangle"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
+    <div class="stat-card orange animate-in animate-in-delay-3">
+        <div class="stat-icon orange">⚠️</div>
+        <div class="stat-value text-mono" id="total-vulns">0</div>
+        <div class="stat-label">Vulnerabilities</div>
+        <div class="stat-trend" style="color: var(--text-tertiary);">Detected issues</div>
     </div>
-    <div class="col-md-3">
-        <div class="card card-stat" style="border-left: 4px solid var(--high);">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted mb-2">Críticas</h6>
-                        <h3 id="critical-count" class="mb-0 text-danger">0</h3>
-                    </div>
-                    <div class="stat-icon text-warning">
-                        <i class="bi bi-exclamation-octagon"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
+    <div class="stat-card red animate-in animate-in-delay-4">
+        <div class="stat-icon red">🚨</div>
+        <div class="stat-value text-mono" id="critical-count">0</div>
+        <div class="stat-label">Critical Issues</div>
+        <div class="stat-trend down">Requires attention</div>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Vulnerabilidades por Severidad</h5>
+<!-- Main Grid -->
+<div style="display: grid; grid-template-columns: 1fr 380px; gap: 24px;">
+    <!-- Recent Scans -->
+    <div class="card animate-in animate-in-delay-2" style="animation-delay: 0.25s;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <span>📋</span>
+                Recent Scans
+            </h3>
+            <a href="/web/scans" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
+                View All
+            </a>
+        </div>
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Vulns</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-scans">
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="skeleton" style="height: 20px; width: 60%; margin: 0 auto 10px;"></div>
+                                <div class="skeleton" style="height: 20px; width: 40%; margin: 0 auto;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sidebar Cards -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Chart -->
+        <div class="card animate-in" style="animation-delay: 0.3s;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <span>📈</span>
+                    Severity Distribution
+                </h3>
             </div>
             <div class="card-body">
                 <div class="chart-container">
@@ -83,52 +94,20 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Top 5 Targets Más Vulnerables</h5>
-            </div>
-            <div class="card-body">
-                <div id="top-vulnerable" class="list-group list-group-flush">
-                    <div class="text-center text-muted">
-                        <i class="bi bi-hourglass-split"></i> Cargando...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Análisis Recientes</h5>
-                <a href="/web/scans" class="btn btn-sm btn-primary">Ver todos</a>
+        <!-- Top Targets -->
+        <div class="card animate-in" style="animation-delay: 0.35s;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <span>🎯</span>
+                    Top Vulnerable
+                </h3>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Target</th>
-                                <th>Tipo</th>
-                                <th>Estado</th>
-                                <th>Vulnerabilidades</th>
-                                <th>Fecha</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recent-scans">
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    <i class="bi bi-hourglass-split"></i> Cargando...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="card-body" id="top-vulnerable" style="padding: 0;">
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <div class="skeleton" style="height: 40px; margin-bottom: 12px;"></div>
+                    <div class="skeleton" style="height: 40px; margin-bottom: 12px;"></div>
+                    <div class="skeleton" style="height: 40px;"></div>
                 </div>
             </div>
         </div>
@@ -138,79 +117,188 @@
 
 {% block extra_js %}
 <script>
-    async function loadDashboard() {
-        try {
-            const response = await fetch('/api/scans/stats');
-            const data = await response.json();
+let severityChart = null;
 
-            document.getElementById('total-scans').textContent = data.total_scans;
-            document.getElementById('total-targets').textContent = data.total_targets;
-            document.getElementById('total-vulns').textContent = data.total_vulnerabilities;
-            document.getElementById('critical-count').textContent = data.vulnerabilities_by_severity.critical;
+function timeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    const intervals = [
+        { label: 'y', seconds: 31536000 },
+        { label: 'mo', seconds: 2592000 },
+        { label: 'd', seconds: 86400 },
+        { label: 'h', seconds: 3600 },
+        { label: 'm', seconds: 60 }
+    ];
+    
+    for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) return `${count}${interval.label} ago`;
+    }
+    return 'Just now';
+}
 
-            const ctx = document.getElementById('severityChart').getContext('2d');
-            new Chart(ctx, {
+async function loadDashboard() {
+    try {
+        const response = await fetch('/api/scans/stats');
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('total-scans').textContent = data.total_scans || 0;
+        document.getElementById('total-targets').textContent = data.total_targets || 0;
+        document.getElementById('total-vulns').textContent = data.total_vulnerabilities || 0;
+        document.getElementById('critical-count').textContent = data.vulnerabilities_by_severity?.critical || 0;
+        
+        // Severity Chart
+        const severityData = data.vulnerabilities_by_severity || {
+            critical: 0, high: 0, medium: 0, low: 0, info: 0
+        };
+        
+        const ctx = document.getElementById('severityChart').getContext('2d');
+        
+        if (severityChart) {
+            severityChart.data.datasets[0].data = [
+                severityData.critical,
+                severityData.high,
+                severityData.medium,
+                severityData.low,
+                severityData.info
+            ];
+            severityChart.update();
+        } else {
+            severityChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Críticas', 'Altas', 'Medias', 'Bajas', 'Info'],
+                    labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
                     datasets: [{
                         data: [
-                            data.vulnerabilities_by_severity.critical,
-                            data.vulnerabilities_by_severity.high,
-                            data.vulnerabilities_by_severity.medium,
-                            data.vulnerabilities_by_severity.low,
-                            data.vulnerabilities_by_severity.info
+                            severityData.critical,
+                            severityData.high,
+                            severityData.medium,
+                            severityData.low,
+                            severityData.info
                         ],
-                        backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#27ae60', '#3498db']
+                        backgroundColor: ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#0071e3'],
+                        borderWidth: 0,
+                        hoverOffset: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '70%',
                     plugins: {
-                        legend: { position: 'bottom' }
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#6e6e73',
+                                font: { family: "'DM Sans', sans-serif", size: 12 },
+                                padding: 16,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1d1d1f',
+                            titleColor: '#ffffff',
+                            bodyColor: '#86868b',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true
+                        }
                     }
                 }
             });
-
-            const topVulnContainer = document.getElementById('top-vulnerable');
-            if (data.top_vulnerable_targets.length === 0) {
-                topVulnContainer.innerHTML = '<div class="text-center text-muted">Sin datos disponibles</div>';
-            } else {
-                topVulnContainer.innerHTML = data.top_vulnerable_targets.map(t =>
-                    `<div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-server me-2"></i>${t.target}</span>
-                    <span class="badge bg-danger">${t.vulnerabilities}</span>
-                </div>`
-                ).join('');
-            }
-
-            const recentScansContainer = document.getElementById('recent-scans');
-            if (data.recent_scans.length === 0) {
-                recentScansContainer.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sin análisis recientes</td></tr>';
-            } else {
-                recentScansContainer.innerHTML = data.recent_scans.map(scan => `
+        }
+        
+        // Top Vulnerable
+        const topVulnContainer = document.getElementById('top-vulnerable');
+        if (!data.top_vulnerable_targets || data.top_vulnerable_targets.length === 0) {
+            topVulnContainer.innerHTML = `
+                <div class="empty-state" style="padding: 40px 20px;">
+                    <div class="empty-icon">🛡️</div>
+                    <div class="empty-title">No vulnerabilities found</div>
+                    <div class="empty-description">Your targets are secure</div>
+                </div>
+            `;
+        } else {
+            topVulnContainer.innerHTML = data.top_vulnerable_targets.slice(0, 5).map((t, i) => `
+                <a href="/web/scans" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 14px 20px;
+                    border-bottom: 1px solid var(--border-light);
+                    text-decoration: none;
+                    color: inherit;
+                    transition: background var(--transition-fast);
+                " onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="
+                            width: 24px;
+                            height: 24px;
+                            background: ${i === 0 ? 'var(--accent-red-light)' : i === 1 ? 'var(--accent-orange-light)' : 'var(--bg-hover)'};
+                            color: ${i === 0 ? 'var(--accent-red)' : i === 1 ? 'var(--accent-orange)' : 'var(--text-tertiary)'};
+                            border-radius: 6px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 11px;
+                            font-weight: 600;
+                        ">${i + 1}</span>
+                        <span class="text-mono" style="font-size: 14px;">${t.target}</span>
+                    </div>
+                    <span class="badge badge-red">${t.vulnerabilities}</span>
+                </a>
+            `).join('');
+        }
+        
+        // Recent Scans
+        const recentScansContainer = document.getElementById('recent-scans');
+        if (!data.recent_scans || data.recent_scans.length === 0) {
+            recentScansContainer.innerHTML = `
                 <tr>
-                    <td>${scan.id}</td>
-                    <td><strong>${scan.target}</strong></td>
-                    <td><span class="badge bg-secondary">${scan.scan_type}</span></td>
-                    <td><span class="status-badge status-${scan.status}">${scan.status}</span></td>
-                    <td>${scan.total_vulnerabilities > 0 ? `<span class="text-danger">${scan.total_vulnerabilities}</span>` : '<span class="text-success">0</span>'}</td>
-                    <td>${new Date(scan.created_at).toLocaleDateString()}</td>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-title">No scans yet</div>
+                            <div class="empty-description">Start your first vulnerability scan</div>
+                            <a href="/web/scan/new" class="btn btn-primary">New Scan</a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            recentScansContainer.innerHTML = data.recent_scans.map(scan => `
+                <tr>
                     <td>
-                        <a href="/web/scans/${scan.id}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i>
-                        </a>
+                        <span class="text-mono" style="font-weight: 500;">${scan.target}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-gray">${scan.scan_type}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-${scan.status === 'completed' ? 'green' : scan.status === 'running' ? 'blue' : scan.status === 'failed' ? 'red' : 'gray'}">
+                            <span class="status-dot ${scan.status}"></span>
+                            ${scan.status}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="text-mono" style="font-weight: ${scan.total_vulnerabilities > 0 ? '600' : '400'}; color: ${scan.total_vulnerabilities > 0 ? 'var(--accent-red)' : 'var(--text-tertiary)'};">
+                            ${scan.total_vulnerabilities}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-secondary); font-size: 13px;">${timeAgo(scan.created_at)}</span>
                     </td>
                 </tr>
             `).join('');
-            }
-
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
         }
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
     }
+}
 
-    loadDashboard();
+loadDashboard();
+setInterval(loadDashboard, 30000);
 </script>
 {% endblock %}

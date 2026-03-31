@@ -1,38 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Detalle de Análisis #{{ scan_id }} - VulnAnalyzer{% endblock %}
+{% block title %}Scan #{{ scan_id }} - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-3">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/web/dashboard">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="/web/scans">Análisis</a></li>
-        <li class="breadcrumb-item active">#{{ scan_id }}</li>
-    </ol>
-</nav>
-
-<div class="page-header d-flex justify-content-between align-items-center">
+<!-- Page Header -->
+<div class="animate-in" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
     <div>
-        <h1><i class="bi bi-search"></i> Detalle de Análisis #{{ scan_id }}</h1>
-        <p class="mb-0" id="target-display">Cargando...</p>
+        <h1 class="page-title">Scan #{{ scan_id }}</h1>
+        <p class="page-subtitle" id="target-display">Loading...</p>
     </div>
-    <div>
-        <a href="/api/reports/{{ scan_id }}/html" target="_blank" class="btn btn-success me-2">
-            <i class="bi bi-file-earmark-text"></i> Ver Reporte
+    <div style="display: flex; gap: 12px;">
+        <a href="/api/reports/{{ scan_id }}/html" target="_blank" class="btn btn-primary">
+            <span>📄</span> View Report
         </a>
-        <a href="/api/reports/{{ scan_id }}/download/html" class="btn btn-outline-success me-2">
-            <i class="bi bi-download"></i> Descargar HTML
+        <a href="/api/reports/{{ scan_id }}/download/html" class="btn btn-secondary">
+            <span>⬇</span> HTML
         </a>
-        <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-outline-primary">
-            <i class="bi bi-download"></i> Descargar JSON
+        <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-secondary">
+            <span>⬇</span> JSON
         </a>
     </div>
 </div>
 
+<!-- Content -->
 <div id="scan-content">
-    <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3">Cargando datos del análisis...</p>
+    <div class="empty-state">
+        <div class="skeleton" style="height: 80px; width: 100%; margin-bottom: 24px;"></div>
+        <div class="skeleton" style="height: 200px; width: 100%;"></div>
     </div>
 </div>
 {% endblock %}
@@ -46,158 +40,169 @@ async function loadScanDetail() {
         
         const scan = await response.json();
         
-        document.getElementById('target-display').textContent = `Target: ${scan.target} | Tipo: ${scan.scan_type}`;
+        document.getElementById('target-display').textContent = `${scan.target} · ${scan.scan_type.toUpperCase()} scan`;
         
         let content = `
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card card-stat" style="border-left: 4px solid var(--secondary);">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Estado</h6>
-                            <span class="status-badge status-${scan.status} fs-5">${scan.status}</span>
-                        </div>
+            <!-- Stats -->
+            <div class="stat-grid" style="margin-bottom: 32px;">
+                <div class="stat-card ${scan.status === 'completed' ? 'green' : scan.status === 'failed' ? 'red' : 'blue'}">
+                    <div class="stat-icon ${scan.status === 'completed' ? 'green' : scan.status === 'failed' ? 'red' : 'blue'}">
+                        <span>${scan.status === 'completed' ? '✓' : scan.status === 'failed' ? '✗' : '◌'}</span>
                     </div>
+                    <div class="stat-value text-mono" style="font-size: 24px; text-transform: uppercase;">${scan.status}</div>
+                    <div class="stat-label">Status</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card card-stat" style="border-left: 4px solid var(--critical);">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Total Vulnerabilidades</h6>
-                            <h3 class="mb-0 text-danger">${scan.total_vulnerabilities}</h3>
-                        </div>
+                
+                <div class="stat-card ${scan.total_vulnerabilities > 0 ? 'orange' : 'green'}">
+                    <div class="stat-icon ${scan.total_vulnerabilities > 0 ? 'orange' : 'green'}">
+                        <span>${scan.total_vulnerabilities > 0 ? '⚠️' : '✓'}</span>
                     </div>
+                    <div class="stat-value text-mono">${scan.total_vulnerabilities}</div>
+                    <div class="stat-label">Total Vulnerabilities</div>
                 </div>
-                <div class="col-md-2">
-                    <div class="card card-stat" style="border-left: 4px solid var(--critical);">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Críticas</h6>
-                            <h3 class="mb-0">${scan.critical_count}</h3>
-                        </div>
-                    </div>
+                
+                <div class="stat-card red">
+                    <div class="stat-icon red"><span>🚨</span></div>
+                    <div class="stat-value text-mono">${scan.critical_count}</div>
+                    <div class="stat-label">Critical</div>
                 </div>
-                <div class="col-md-2">
-                    <div class="card card-stat" style="border-left: 4px solid var(--high);">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Altas</h6>
-                            <h3 class="mb-0">${scan.high_count}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="card card-stat" style="border-left: 4px solid var(--medium);">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Medias</h6>
-                            <h3 class="mb-0">${scan.medium_count}</h3>
-                        </div>
-                    </div>
+                
+                <div class="stat-card orange">
+                    <div class="stat-icon orange"><span>⚠️</span></div>
+                    <div class="stat-value text-mono">${scan.high_count}</div>
+                    <div class="stat-label">High</div>
                 </div>
             </div>
-            
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <p><strong>Fecha:</strong> ${new Date(scan.created_at).toLocaleString()}</p>
-                            ${scan.completed_at ? `<p><strong>Completado:</strong> ${new Date(scan.completed_at).toLocaleString()}</p>` : ''}
-                            ${scan.error_message ? `<p class="text-danger"><strong>Error:</strong> ${scan.error_message}</p>` : ''}
+
+            <!-- Info Card -->
+            <div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
+                <div class="card-header">
+                    <h3 class="card-title"><span>ℹ️</span> Scan Information</h3>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 6px;">Target</div>
+                            <div class="text-mono" style="font-size: 18px; font-weight: 600; color: var(--accent-blue);">${scan.target}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 6px;">Scan Type</div>
+                            <span class="badge badge-blue">${scan.scan_type}</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 6px;">Started</div>
+                            <div class="text-mono">${new Date(scan.created_at).toLocaleString()}</div>
                         </div>
                     </div>
+                    
+                    ${scan.error_message ? `
+                    <div style="margin-top: 20px; padding: 16px; background: var(--accent-red-light); border-radius: var(--radius-md);">
+                        <div style="font-weight: 600; color: var(--accent-red); margin-bottom: 8px;">⚠️ Error</div>
+                        <div class="text-mono" style="font-size: 13px; color: var(--text-secondary);">${scan.error_message}</div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
-        
+
         if (scan.results) {
             const hosts = Object.keys(scan.results);
             
             if (hosts.length > 0) {
-                content += '<div class="row">';
+                content += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">';
                 
-                hosts.forEach(host => {
+                hosts.forEach((host, idx) => {
                     const hostData = scan.results[host];
                     const vulns = hostData.vulnerabilities || [];
+                    const ports = Object.keys(hostData.ports || {});
                     
                     content += `
-                        <div class="col-md-12 mb-4">
-                            <div class="card">
-                                <div class="card-header bg-white">
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-server"></i> ${host}
-                                        <span class="badge bg-${hostData.status === 'up' ? 'success' : 'danger'} ms-2">${hostData.status}</span>
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    ${Object.keys(hostData.ports || {}).length > 0 ? `
-                                        <h6 class="text-muted mb-3">Puertos Detectados</h6>
-                                        <div class="table-responsive mb-4">
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Puerto</th>
-                                                        <th>Estado</th>
-                                                        <th>Servicio</th>
-                                                        <th>Versión</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${Object.entries(hostData.ports).map(([port, data]) => `
-                                                        <tr>
-                                                            <td><strong>${port}</strong></td>
-                                                            <td><span class="badge bg-${data.state === 'open' ? 'success' : 'secondary'}">${data.state}</span></td>
-                                                            <td>${data.service || 'N/A'}</td>
-                                                            <td>${data.version || 'N/A'}</td>
-                                                        </tr>
-                                                    `).join('')}
-                                                </tbody>
-                                            </table>
+                        <div class="card animate-in" style="animation-delay: ${0.15 + idx * 0.1}s;">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <span>🖥️</span>
+                                    <span class="text-mono">${host}</span>
+                                    <span class="badge badge-${hostData.status === 'up' ? 'green' : 'red'}" style="margin-left: auto;">
+                                        ${hostData.status}
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                ${ports.length > 0 ? `
+                                    <div style="margin-bottom: 20px;">
+                                        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 12px;">
+                                            Open Ports (${ports.length})
                                         </div>
-                                    ` : ''}
-                                    
-                                    ${vulns.length > 0 ? `
-                                        <h6 class="text-muted mb-3">Vulnerabilidades</h6>
-                                        <div class="table-responsive">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Tipo</th>
-                                                        <th>Severidad</th>
-                                                        <th>Descripción</th>
-                                                        <th>Recomendación</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${vulns.map(v => `
-                                                        <tr>
-                                                            <td><strong>${v.type || 'N/A'}</strong></td>
-                                                            <td><span class="severity-badge severity-${v.severity || 'info'}">${v.severity || 'info'}</span></td>
-                                                            <td>${v.description || 'Sin descripción'}</td>
-                                                            <td>${v.recommendation || 'Consultar documentación'}</td>
-                                                        </tr>
-                                                    `).join('')}
-                                                </tbody>
-                                            </table>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            ${ports.map(port => {
+                                                const pData = hostData.ports[port];
+                                                return `
+                                                    <div style="
+                                                        padding: 8px 14px;
+                                                        background: var(--bg-hover);
+                                                        border-radius: var(--radius-sm);
+                                                        font-size: 13px;
+                                                    ">
+                                                        <span class="text-mono" style="color: var(--accent-blue); font-weight: 500;">${port}</span>
+                                                        <span style="color: var(--text-tertiary); margin: 0 6px;">|</span>
+                                                        <span>${pData.service || 'unknown'}</span>
+                                                        ${pData.version ? `<span style="color: var(--text-tertiary); font-size: 11px;"> ${pData.version}</span>` : ''}
+                                                    </div>
+                                                `;
+                                            }).join('')}
                                         </div>
-                                    ` : `
-                                        <div class="alert alert-success">
-                                            <i class="bi bi-check-circle"></i> No se detectaron vulnerabilidades en este host
+                                    </div>
+                                ` : ''}
+                                
+                                ${vulns.length > 0 ? `
+                                    <div>
+                                        <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 12px;">
+                                            Vulnerabilities (${vulns.length})
                                         </div>
-                                    `}
-                                </div>
+                                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                                            ${vulns.map(v => `
+                                                <div style="
+                                                    padding: 14px;
+                                                    background: ${v.severity === 'critical' ? 'var(--accent-red-light)' : v.severity === 'high' ? 'var(--accent-orange-light)' : 'var(--accent-blue-light)'};
+                                                    border-radius: var(--radius-md);
+                                                    border-left: 3px solid ${v.severity === 'critical' ? 'var(--accent-red)' : v.severity === 'high' ? 'var(--accent-orange)' : 'var(--accent-blue)'};
+                                                ">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                                        <span class="text-mono" style="font-weight: 600; font-size: 13px;">${v.type || 'Unknown'}</span>
+                                                        <span class="badge badge-${v.severity === 'critical' ? 'red' : v.severity === 'high' ? 'orange' : 'blue'}">${v.severity}</span>
+                                                    </div>
+                                                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                                                        ${v.description || 'No description available'}
+                                                    </div>
+                                                    ${v.recommendation ? `
+                                                        <div style="font-size: 12px; color: var(--accent-green);">
+                                                            💡 ${v.recommendation}
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div style="text-align: center; padding: 30px; color: var(--accent-green);">
+                                        <span style="font-size: 32px;">✓</span>
+                                        <div style="font-weight: 500; margin-top: 8px;">No vulnerabilities detected</div>
+                                    </div>
+                                `}
                             </div>
                         </div>
                     `;
                 });
                 
                 content += '</div>';
-            } else {
-                content += `
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> No hay resultados disponibles
-                    </div>
-                `;
             }
         } else if (scan.status === 'completed' && !scan.results) {
             content += `
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> El scan se completó pero no hay resultados almacenados
+                <div class="card">
+                    <div class="card-body" style="text-align: center; padding: 60px;">
+                        <span style="font-size: 48px;">📋</span>
+                        <div style="color: var(--text-secondary); margin-top: 16px;">Scan completed but no results stored</div>
+                    </div>
                 </div>
             `;
         }
@@ -207,8 +212,12 @@ async function loadScanDetail() {
     } catch (error) {
         console.error('Error loading scan:', error);
         document.getElementById('scan-content').innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle"></i> Error al cargar los datos del análisis
+            <div class="card">
+                <div class="card-body" style="text-align: center; padding: 60px;">
+                    <span style="font-size: 48px;">⚠️</span>
+                    <div style="font-weight: 600; color: var(--accent-red); margin-top: 16px;">Error loading scan</div>
+                    <div style="color: var(--text-secondary); margin-top: 8px;">${error.message}</div>
+                </div>
             </div>
         `;
     }
