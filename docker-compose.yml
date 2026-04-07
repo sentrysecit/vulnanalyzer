@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
     networks:
       - security-network
+      
   # openvas:
   #   image: immauss/openvas:24.12.03
   #   container_name: openvas

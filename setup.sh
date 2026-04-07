@@ -1,56 +1,52 @@
 #!/bin/bash
-
-# Exit on any error
 set -e
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+command_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# Check required dependencies
-echo "Checking dependencies..."
-if ! command_exists pip; then
-    echo "Error: pip is not installed"
+# Verificar dependencias
+for cmd in pip git docker; do
+    if ! command_exists $cmd; then
+        echo "Error: $cmd is not installed"
+        exit 1
+    fi
+done
+
+# Verificar Docker daemon
+if ! docker info >/dev/null 2>&1; then
+    echo "Error: Docker daemon is not running"
     exit 1
 fi
 
-if ! command_exists git; then
-    echo "Error: git is not installed"
+# Verificar requirements.txt
+if [ ! -f "requirements.txt" ]; then
+    echo "Error: requirements.txt not found"
     exit 1
 fi
 
-if ! command_exists docker; then
-    echo "Error: docker is not installed"
-    exit 1
-fi
-
-# Install dependencies
-echo "Installing dependencies..."
+# Instalar dependencias
+echo "Installing Python dependencies..."
 pip install -r requirements.txt
 
-# Create folder tools
-echo "Creating tools directory..."
+# Configurar Caldera
 mkdir -p tools
 cd tools
 
-# Clone the Caldera repository
-echo "Cloning the Caldera repository..."
 if [ -d "caldera" ]; then
-    echo "Caldera directory already exists. Removing it..."
+    echo "Removing existing Caldera directory..."
     rm -rf caldera
 fi
 
+echo "Cloning Caldera repository..."
 git clone https://github.com/mitre/caldera.git --recursive --branch 5.3.0
 cd caldera
 
-# Build Docker image
-echo "Building Caldera Docker image..."
+echo "Building Docker image..."
 docker build --build-arg WIN_BUILD=true . -t caldera:server
 
 echo "Setup completed successfully!"
-echo "You can now run Caldera using: docker run -p 8888:8888 caldera:server"
+echo "Correr caldera con el docker-compose.yml"
+# echo "Run Caldera with: docker run -p 8888:8888 caldera:server"
 
-# Donwload image OpenVas
+# Descargar OpenVAS (opcional)
+# echo "Downloading OpenVAS image..."
 # docker pull immauss/openvas:24.12.03
-
