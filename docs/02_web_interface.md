@@ -208,10 +208,12 @@ La API REST permite integrar VulnAnalyzer con otras herramientas o automatizar p
 | POST | `/api/scans` | Crear nuevo análisis |
 | GET | `/api/scans/{id}` | Detalle de un análisis |
 | DELETE | `/api/scans/{id}` | Eliminar análisis |
+| PATCH | `/api/scans/{id}/status` | Actualizar estado de análisis |
 | GET | `/api/scans/stats` | Estadísticas globales |
 | GET | `/api/reports/{id}` | Datos del reporte |
 | GET | `/api/reports/{id}/html` | Reporte en HTML |
 | GET | `/api/reports/{id}/download/{format}` | Descargar reporte |
+| GET | `/health` | Health check del servicio |
 
 ### Documentación Interactiva
 

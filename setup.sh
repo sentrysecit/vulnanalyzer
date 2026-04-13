@@ -36,6 +36,13 @@ if [ -d "caldera" ]; then
     rm -rf caldera
 fi
 
+if [ -d "fuzzing" ]; then
+    echo "Removing existing fuzzing directory..."
+    rm -rf fuzzing
+fi
+
+mkdir -p fuzzing
+
 echo "Cloning Caldera repository..."
 git clone https://github.com/mitre/caldera.git --recursive --branch 5.3.0
 cd caldera
