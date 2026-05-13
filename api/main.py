@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from api.database import init_db
-from api.routers import scans, reports
+from api.routers import scans, reports, enum
 
 app = FastAPI(
     title="VulnAnalyzer API",
@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(scans.router)
 app.include_router(reports.router)
+app.include_router(enum.router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -74,6 +75,40 @@ def report_page(request: Request, scan_id: int):
 @app.get("/web/scan/new", tags=["web"])
 def new_scan_page(request: Request):
     return templates.TemplateResponse(name="scan_new.html", request=request)
+
+
+@app.get("/web/subdomain/new", tags=["web"])
+def new_subdomain_page(request: Request):
+    return templates.TemplateResponse(name="subdomain_new.html", request=request)
+
+
+@app.get("/web/fuzz/new", tags=["web"])
+def new_fuzz_page(request: Request):
+    return templates.TemplateResponse(name="fuzz_new.html", request=request)
+
+
+@app.get("/web/enum/subdomains", tags=["web"])
+def subdomain_list_page(request: Request):
+    return templates.TemplateResponse(name="subdomain_list.html", request=request)
+
+
+@app.get("/web/enum/subdomains/{enum_id}", tags=["web"])
+def subdomain_detail_page(request: Request, enum_id: int):
+    return templates.TemplateResponse(
+        name="subdomain_detail.html", request=request, context={"enum_id": enum_id}
+    )
+
+
+@app.get("/web/enum/fuzz", tags=["web"])
+def fuzz_list_page(request: Request):
+    return templates.TemplateResponse(name="fuzz_list.html", request=request)
+
+
+@app.get("/web/enum/fuzz/{fuzz_id}", tags=["web"])
+def fuzz_detail_page(request: Request, fuzz_id: int):
+    return templates.TemplateResponse(
+        name="fuzz_detail.html", request=request, context={"fuzz_id": fuzz_id}
+    )
 
 
 @app.get("/health", tags=["health"])

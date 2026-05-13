@@ -5,8 +5,10 @@
 1. [Instalación](#instalación)
 2. [CLI - Uso desde Consola](#cli---uso-desde-consola)
 3. [Interfaz Web](#interfaz-web)
-4. [API REST](#api-rest)
-5. [Base de Datos](#base-de-datos)
+4. [Enumeración de Subdominios](#enumeración-de-subdominios)
+5. [Fuzzing de Rutas](#fuzzing-de-rutas)
+6. [API REST](#api-rest)
+7. [Base de Datos](#base-de-datos)
 
 ---
 
@@ -38,12 +40,14 @@ python main.py discover <rango_red> [opciones]
 ```
 
 **Ejemplo:**
+
 ```bash
 python main.py discover 192.168.1.0/24
 python main.py discover 10.0.0.0/24 -o hosts.json
 ```
 
 **Opciones:**
+
 - `-o, --output <archivo>` - Guardar resultados en JSON
 
 ---
@@ -57,6 +61,7 @@ python main.py scan <objetivo> [opciones]
 ```
 
 **Ejemplo:**
+
 ```bash
 python main.py scan 192.168.1.10
 python main.py scan 192.168.1.10 --type quick
@@ -65,6 +70,7 @@ python main.py scan 192.168.1.10 -o resultados.json --report reporte.html
 ```
 
 **Opciones:**
+
 - `--type {quick|full|stealth}` - Tipo de escaneo
   - `quick`: Puertos comunes
   - `full`: Todos los puertos + detección de SO
@@ -83,6 +89,7 @@ python main.py exploit [opciones]
 ```
 
 **Ejemplo:**
+
 ```bash
 python main.py exploit --list
 python main.py exploit --scan-file resultados.json
@@ -90,6 +97,7 @@ python main.py exploit --scan-file resultados.json --target 192.168.1.10 --explo
 ```
 
 **Opciones:**
+
 - `--scan-file <archivo>` - Archivo con resultados de escaneo previo
 - `--target <objetivo>` - Objetivo específico
 - `--exploit <nombre>` - Exploit específico a ejecutar
@@ -106,12 +114,14 @@ python main.py caldera [opciones]
 ```
 
 **Ejemplo:**
+
 ```bash
 python main.py caldera --deploy --platform linux
 python main.py caldera --run --adversary "APT29"
 ```
 
 **Opciones:**
+
 - `--deploy` - Desplegar agente en el objetivo
 - `--platform {windows|linux|darwin}` - Plataforma del agente
 - `--run` - Ejecutar evaluación con Caldera
@@ -128,6 +138,7 @@ python main.py web [opciones]
 ```
 
 **Ejemplo:**
+
 ```bash
 python main.py web
 python main.py web --port 8080
@@ -135,6 +146,7 @@ python main.py web --host 127.0.0.1 --port 3000
 ```
 
 **Opciones:**
+
 - `--host <direccion>` - Host donde bindear (default: 0.0.0.0)
 - `--port <puerto>` - Puerto donde bindear (default: 8000)
 - `--reload` - Habilitar auto-reload para desarrollo
@@ -148,20 +160,24 @@ La interfaz web proporciona una forma visual de gestionar análisis y generar re
 ### Acceder
 
 1. Inicia el servidor web:
+
    ```bash
    python main.py web
    ```
 
 2. Abre tu navegador en:
-   - **Dashboard:** http://localhost:8000/web/dashboard
-   - **Lista de Análisis:** http://localhost:8000/web/scans
-   - **Nuevo Análisis:** http://localhost:8000/web/scan/new
+   - **Dashboard:** <http://localhost:8000/web/dashboard>
+   - **Lista de Análisis:** <http://localhost:8000/web/scans>
+   - **Nuevo Análisis:** <http://localhost:8000/web/scan/new>
+   - **Subdominios:** <http://localhost:8000/web/subdomain/new>
+   - **Fuzzing:** <http://localhost:8000/web/fuzz/new>
 
 ### Funcionalidades
 
 #### Dashboard
 
 Muestra un resumen con:
+
 - Total de análisis realizados
 - Targets analizados
 - Total de vulnerabilidades encontradas
@@ -172,6 +188,7 @@ Muestra un resumen con:
 #### Lista de Análisis
 
 Permite:
+
 - Ver todos los análisis realizados
 - Filtrar por target, tipo y estado
 - Buscar por nombre de objetivo
@@ -181,6 +198,7 @@ Permite:
 #### Detalle de Análisis
 
 Muestra:
+
 - Información del scan (target, tipo, estado, fecha)
 - Puertos y servicios detectados
 - Vulnerabilidades encontradas con severidad
@@ -190,6 +208,64 @@ Muestra:
 #### Generar Nuevo Análisis
 
 Formulario para:
+
+- Escanear targets individuales
+- Seleccionar tipo de scan
+
+---
+
+## Enumeración de Subdominios
+
+La interfaz web permite enumerar subdominios de forma visual.
+
+### Opciones del Formulario
+
+- **Target Domain**: Dominio objetivo (ej: example.com)
+- **Wordlist**: Selección de wordlist predefinida o ruta personalizada
+- **Threads**: Número de hilos (40 por defecto)
+- **Run Nuclei**: Opción para ejecutar nuclei en hosts descubiertos
+
+### URLs
+
+- **Nuevo:** <http://localhost:8000/web/subdomain/new>
+
+### Flujo
+
+1. Ingresa el dominio objetivo
+2. Selecciona la wordlist
+3. Ajusta el número de hilos
+4. Haz clic en "Start Enumeration"
+5. Los resultados se muestran en pantalla
+
+---
+
+## Fuzzing de Rutas
+
+La interfaz web permite hacer fuzzing de directorios y rutas.
+
+### Opciones del Formulario
+
+- **Target URL**: URL completa con protocolo (http:// o https://)
+- **Wordlist**: Selección de wordlist predefinida o ruta personalizada
+- **Extensions**: Extensiones de archivo a probar (ej: .php,.html,.txt)
+- **Threads**: Número de hilos (40 por defecto)
+
+### URLs
+
+- **Nuevo:** <http://localhost:8000/web/fuzz/new>
+
+### Flujo
+
+1. Ingresa la URL objetivo
+2. Selecciona la wordlist
+3. Opcional: Agrega extensiones
+4. Haz clic en "Start Fuzzing"
+5. Los resultados se muestran en pantalla
+
+---
+
+## API REST
+
 - Ingresar objetivo (IP, dominio o rango CIDR)
 - Seleccionar tipo de escaneo
 - Iniciar análisis
@@ -213,20 +289,27 @@ La API REST permite integrar VulnAnalyzer con otras herramientas o automatizar p
 | GET | `/api/reports/{id}` | Datos del reporte |
 | GET | `/api/reports/{id}/html` | Reporte en HTML |
 | GET | `/api/reports/{id}/download/{format}` | Descargar reporte |
+| GET | `/api/enum/wordlists` | Wordlists disponibles |
+| POST | `/api/enum/subdomain` | Iniciar enumeración de subdominios |
+| GET | `/api/enum/subdomain/{id}` | Resultados de enumeración |
+| POST | `/api/enum/fuzz` | Iniciar fuzzing de rutas |
+| GET | `/api/enum/fuzz/{id}` | Resultados de fuzzing |
 | GET | `/health` | Health check del servicio |
 
 ### Documentación Interactiva
 
-Accede a la documentación Swagger en: http://localhost:8000/docs
+Accede a la documentación Swagger en: <http://localhost:8000/docs>
 
 ### Ejemplos con curl
 
 **Listar análisis:**
+
 ```bash
 curl http://localhost:8000/api/scans
 ```
 
 **Crear análisis:**
+
 ```bash
 curl -X POST http://localhost:8000/api/scans \
   -H "Content-Type: application/json" \
@@ -234,18 +317,44 @@ curl -X POST http://localhost:8000/api/scans \
 ```
 
 **Ver análisis específico:**
+
 ```bash
 curl http://localhost:8000/api/scans/1
 ```
 
 **Descargar reporte JSON:**
+
 ```bash
 curl -O http://localhost:8000/api/reports/1/download/json
 ```
 
 **Ver estadísticas:**
+
 ```bash
 curl http://localhost:8000/api/scans/stats
+```
+
+**Listar wordlists disponíveis:**
+
+```bash
+curl "http://localhost:8000/api/enum/wordlists?type=subdomain"
+curl "http://localhost:8000/api/enum/wordlists?type=fuzz"
+```
+
+**Iniciar enumeración de subdominios:**
+
+```bash
+curl -X POST http://localhost:8000/api/enum/subdomain \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "wordlist": "", "threads": 40, "use_nuclei": false}'
+```
+
+**Iniciar fuzzing de rutas:**
+
+```bash
+curl -X POST http://localhost:8000/api/enum/fuzz \
+  -H "Content-Type: application/json" \
+  -d '{"target": "http://example.com", "wordlist": "", "threads": 40, "extensions": ".php,.html"}'
 ```
 
 ---
@@ -257,6 +366,7 @@ VulnAnalyzer utiliza SQLite para almacenar análisis de forma persistente.
 ### Ubicación
 
 La base de datos se encuentra en:
+
 ```
 data/vulnanalyzer.db
 ```

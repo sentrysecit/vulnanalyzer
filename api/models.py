@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Text, Enum, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from api.database import Base
 import enum
@@ -49,3 +50,59 @@ class Scan(Base):
         import json
 
         self.results_json = json.dumps(value) if value else None
+
+
+class SubdomainEnum(Base):
+    __tablename__ = "subdomain_enum"
+
+    id = Column(Integer, primary_key=True, index=True)
+    target = Column(String(255), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    wordlist = Column(String(255), nullable=True)
+    total_found = Column(Integer, default=0)
+    alive_count = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    error_message = Column(Text, nullable=True)
+
+    results = relationship("SubdomainResult", back_populates="enumeration")
+
+
+class SubdomainResult(Base):
+    __tablename__ = "subdomain_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enum_id = Column(Integer, ForeignKey("subdomain_enum.id"))
+    subdomain = Column(String(255), nullable=False)
+    is_alive = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    enumeration = relationship("SubdomainEnum", back_populates="results")
+
+
+class PathFuzz(Base):
+    __tablename__ = "path_fuzz"
+
+    id = Column(Integer, primary_key=True, index=True)
+    target = Column(String(255), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    wordlist = Column(String(255), nullable=True)
+    extensions = Column(String(255), nullable=True)
+    total_found = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    error_message = Column(Text, nullable=True)
+
+    results = relationship("PathResult", back_populates="fuzz")
+
+
+class PathResult(Base):
+    __tablename__ = "path_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    fuzz_id = Column(Integer, ForeignKey("path_fuzz.id"))
+    path = Column(String(500), nullable=False)
+    status_code = Column(String(10), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    fuzz = relationship("PathFuzz", back_populates="results")

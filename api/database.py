@@ -30,6 +30,6 @@ def get_db():
 
 
 def init_db():
-    from api.models import Scan
+    from api.models import Scan, SubdomainEnum, SubdomainResult, PathFuzz, PathResult
 
     Base.metadata.create_all(bind=engine)

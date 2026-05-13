@@ -12,6 +12,8 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates Caldera 
 🔍 Automated vulnerability analysis <br>
 🔗 Integration with Caldera for security operations <br>
 🛡️ Scanning with Nmap <br>
+🌐 Subdomain enumeration (subfinder + ffuf) <br>
+📁 Path/directory fuzzing (ffuf) <br>
 📊 Detailed report generation (HTML, JSON) <br>
 🌐 Web interface with dashboard and reports viewer <br>
 🔌 REST API for integration with other tools <br>
@@ -126,7 +128,9 @@ vulnanalyzer/
 │   ├── scanner.py        # Vulnerability scanner
 │   ├── discover.py       # Host discovery
 │   ├── exploiter.py      # Exploit execution
-│   └── caldera_client.py # Caldera integration
+│   ├── caldera_client.py # Caldera integration
+│   ├── subdomain_enum.py # Subdomain enumeration
+│   └── path_fuzz.py     # Path/directory fuzzing
 ├── docs/                 # Documentation
 ├── modules/              # Fingerprints and modules
 ├── reports/              # Report generation
@@ -172,6 +176,9 @@ pip install -r requirements.txt
 
 # CLI Usage
 python main.py scan 192.168.1.10 --type full
+python main.py discover 192.168.1.0/24
+python main.py subdomain example.com
+python main.py fuzz http://example.com
 
 # Start Web Interface
 python main.py web

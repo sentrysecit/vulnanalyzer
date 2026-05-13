@@ -78,3 +78,81 @@ class ReportResponse(BaseModel):
     scan: ScanDetail
     summary: Dict[str, Any]
     generated_at: datetime
+
+
+class SubdomainRequest(BaseModel):
+    target: str
+    wordlist: Optional[str] = None
+    threads: int = 40
+    use_nuclei: bool = False
+
+
+class SubdomainResponse(BaseModel):
+    id: int
+    target: str
+    status: str
+    wordlist: Optional[str] = None
+    total_found: int = 0
+    alive_count: int = 0
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SubdomainDetail(SubdomainResponse):
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+
+
+class SubdomainResultResponse(BaseModel):
+    id: int
+    enum_id: int
+    subdomain: str
+    is_alive: bool = False
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class FuzzRequest(BaseModel):
+    target: str
+    wordlist: Optional[str] = None
+    threads: int = 40
+    extensions: Optional[str] = None
+
+
+class FuzzResponse(BaseModel):
+    id: int
+    target: str
+    status: str
+    wordlist: Optional[str] = None
+    total_found: int = 0
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class FuzzDetail(FuzzResponse):
+    extensions: Optional[str] = None
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None
+
+
+class PathResultResponse(BaseModel):
+    id: int
+    fuzz_id: int
+    path: str
+    status_code: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WordlistResponse(BaseModel):
+    name: str
+    path: str
+    description: str
