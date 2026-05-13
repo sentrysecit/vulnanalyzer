@@ -1,33 +1,41 @@
-# Framework VulnAnalyzer
+# VulnAnalyzer Framework
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 📋 Description
+## Description
 
-VulnAnalyzer Framework is a vulnerability analysis tool that integrates Caldera to perform automated security assessments. It enables efficient identification and analysis of vulnerabilities in systems and networks.
+VulnAnalyzer Framework is a vulnerability analysis tool that integrates MITRE Caldera to perform automated security assessments. It enables efficient identification, analysis, and exploitation of vulnerabilities in systems and networks through an integrated CLI, web interface, and REST API.
 
-## ✨ Features
+## Features
 
-🔍 Automated vulnerability analysis <br>
-🔗 Integration with Caldera for security operations <br>
-🛡️ Scanning with Nmap <br>
-🌐 Subdomain enumeration (subfinder + ffuf) <br>
-📁 Path/directory fuzzing (ffuf) <br>
-📊 Detailed report generation (HTML, JSON) <br>
-🌐 Web interface with dashboard and reports viewer <br>
-🔌 REST API for integration with other tools <br>
-💾 SQLite database for persistent storage <br>
-🐍 Developed in Python <br>
-🔧 Flexible configuration using environment variables <br>
+- **Vulnerability Scanning** - Automated scanning with Nmap (quick, full, stealth modes)
+- **CVE Detection** - Automatic CVE lookup via NVD API and CISA Known Exploited Vulnerabilities (KEV) catalog
+- **Exploit Finding** - Search for available exploits via searchsploit and pyexploitdb
+- **Vulnerability Database** - Full CRUD for vulnerabilities with per-scan, per-host, and per-enum querying
+- **Subdomain Enumeration** - Passive enumeration (subfinder) and active fuzzing (ffuf)
+- **Path/Directory Fuzzing** - Discover hidden paths and directories on web servers (ffuf)
+- **Host Discovery** - Network host discovery via Nmap
+- **Exploit Execution** - Run exploits against detected vulnerabilities
+- **MITRE Caldera Integration** - Adversary emulation and agent deployment
+- **Report Generation** - Detailed reports in HTML, JSON, and PDF formats
+- **Web Interface** - Dashboard, scan management, report viewer, and enumeration UI
+- **REST API** - Full API for integration with other tools and automation
+- **SQLite Database** - Persistent storage for scans, vulnerabilities, and enumeration results
+- **Web Vulnerability Scanning** - Security header checking on web targets
+- **Docker Support** - Docker Compose for Caldera and optional OpenVAS
 
-## 🚀  Installation
+## Installation
 
 ### Prerequisites
 
 - Python 3.10 or higher
 - Nmap (for network scanning)
-- Access to a Caldera server
+- Docker (for Caldera deployment)
+- subfinder (optional, for passive subdomain enumeration)
+- ffuf (optional, for subdomain/path fuzzing)
+- nuclei (optional, for vulnerability scanning on discovered hosts)
+- searchsploit (optional, for exploit search)
 
 ### Installation Steps
 
@@ -39,8 +47,6 @@ cd vulnanalyzer
 ```
 
 #### 2. Create a Virtual Environment
-
-It is recommended to use a virtual environment to isolate project dependencies from the system environment.
 
 ```bash
 # Create the virtual environment
@@ -54,18 +60,24 @@ source venv/bin/activate
 venv\Scripts\activate
 ```
 
-#### 3. Configure Tools and Install requirements.txt
+#### 3. Run the Setup Script
 
-Run the setup script to prepare the Caldera environment:
+The setup script installs Python dependencies, clones Caldera, and builds its Docker image:
 
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-#### 4. Install Nmap (if not available)
+What the script does:
+1. Checks for `pip`, `git`, and `docker` commands
+2. Verifies Docker daemon is running
+3. Installs `requirements.txt`
+4. Creates `tools/` and output directories
+5. Clones Caldera (branch 5.3.0, recursive)
+6. Builds the Caldera Docker image
 
-If the tool is run from a server without Nmap installed:
+#### 4. Install Nmap (if not available)
 
 ```bash
 # Debian/Ubuntu
@@ -81,7 +93,7 @@ sudo pacman -S nmap
 brew install nmap
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -97,78 +109,88 @@ LOG_LEVEL=INFO
 OUTPUT_DIR=./reports
 ```
 
+### Application Settings (`config/settings.py`)
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `DEBUG` | True | Debug mode |
+| `VERSION` | "1.0.0" | Application version |
+| `DEFAULT_SCAN_TYPE` | "full" | Default scan type |
+| `DEFAULT_THREADS` | 10 | Default thread count |
+| `DEFAULT_TIMEOUT` | 30 | Default timeout (seconds) |
+| `REPORT_COMPANY_NAME` | - | Company name for reports |
+| `LOG_LEVEL` | "INFO" | Logging level |
+| `LOG_FILE` | - | Log file path |
+| `EXPLOIT_TIMEOUT` | - | Exploit execution timeout |
+
 ### Obtaining the Caldera API Key
 
-1. To access Caldera through the Docker container:
+1. Access Caldera through the Docker container:
 
 ```bash
 docker exec -it caldera-server /bin/bash
 ```
 
-1. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
+2. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
 
 ```bash
 cat conf/local.yml
 ```
 
-1. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
-4.Copy the API key into the `.env` file.
+3. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
+4. Copy the API key into the `.env` file.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 vulnanalyzer/
-├── api/                  # FastAPI application
-│   ├── routers/          # API endpoints
-│   ├── models.py         # Database models
-│   ├── schemas.py        # Pydantic schemas
-│   └── database.py       # SQLite configuration
-├── config/               # Application settings
-├── core/                 # Core functionality
-│   ├── scanner.py        # Vulnerability scanner
-│   ├── discover.py       # Host discovery
-│   ├── exploiter.py      # Exploit execution
-│   ├── caldera_client.py # Caldera integration
-│   ├── subdomain_enum.py # Subdomain enumeration
-│   └── path_fuzz.py     # Path/directory fuzzing
-├── docs/                 # Documentation
-├── modules/              # Fingerprints and modules
-├── reports/              # Report generation
-├── services/             # Business logic services
-├── web/                  # Web interface
-│   └── templates/        # HTML templates
-├── main.py               # CLI entry point
-├── requirements.txt
-└── setup.sh
+├── api/                        # FastAPI REST API
+│   ├── routers/                # API endpoints
+│   │   ├── scans.py            # Scan CRUD endpoints
+│   │   ├── reports.py          # Report generation/viewing
+│   │   ├── enum.py             # Subdomain & fuzzing endpoints
+│   │   └── vulns.py            # Vulnerability & CVE endpoints
+│   ├── tools/                  # Tool assets (wordlists, fuzzing output)
+│   ├── models.py               # SQLAlchemy models (6 tables)
+│   ├── schemas.py              # Pydantic schemas (21 schemas)
+│   ├── database.py             # SQLite connection
+│   └── main.py                 # FastAPI app + web routes
+├── core/                       # Core functionality
+│   ├── scanner.py              # Vulnerability scanner (nmap + CVE + exploits)
+│   ├── cve_scanner.py          # CVE lookup (NVD API, CISA KEV, local cache)
+│   ├── exploit_finder.py       # Exploit search (searchsploit, pyexploitdb)
+│   ├── discover.py             # Host discovery
+│   ├── exploiter.py            # Exploit execution
+│   ├── caldera_client.py       # MITRE Caldera integration
+│   ├── subdomain_enum.py       # Subdomain enumeration (subfinder + ffuf)
+│   ├── path_fuzz.py            # Path/directory fuzzing (ffuf)
+│   └── utils.py                # Utility functions
+├── services/                   # Business logic
+│   ├── scan_service.py         # Scan orchestration service
+│   └── report_service.py       # Report generation service
+├── config/                     # Configuration
+│   └── settings.py             # Application settings
+├── modules/                    # Fingerprints and detection modules
+│   └── fingerprints/           # Service fingerprinting
+├── data/                       # Runtime data
+│   ├── vulnanalyzer.db         # SQLite database
+│   └── cve_cache/              # CVE JSON cache + KEV cache
+├── web/                        # Web interface
+│   ├── templates/              # Jinja2 HTML templates
+│   └── static/                 # Static assets
+├── reports/                    # Report generation
+│   └── report_generator.py     # HTML, JSON, PDF report generation
+├── docs/                       # Documentation
+│   ├── 01_usage.md             # CLI usage guide
+│   ├── 02_web_interface.md     # Web & API guide
+│   └── 03_vulnerability_database.md  # Vulnerability system guide
+├── docker-compose.yml          # Docker config (Caldera + optional OpenVAS)
+├── main.py                     # CLI entry point
+├── requirements.txt            # Python dependencies
+└── setup.sh                    # Setup script (deps + Caldera + dirs)
 ```
 
-## 📄 License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
-
-## 🔗 Useful Links
-
-- [Caldera Documentation](https://caldera.readthedocs.io/)
-- [Nmap Guide](https://nmap.org/docs.html)
-
-## 📊 Project Status
-
-- ✅ Basic installation and configuration
-- ✅ Caldera integration
-- ✅ Nmap integration
-- ✅ Report generation (HTML, JSON)
-- ✅ Web interface with dashboard
-- ✅ REST API
-- ✅ SQLite database for storage
-
----
-
-## 📚 Documentation
-
-- [Manual de Uso](./docs/01_usage.md) - Guía básica de uso de CLI
-- [Interfaz Web y API](./docs/02_web_interface.md) - Guía completa de la interfaz web y API REST
-
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -179,12 +201,30 @@ python main.py scan 192.168.1.10 --type full
 python main.py discover 192.168.1.0/24
 python main.py subdomain example.com
 python main.py fuzz http://example.com
+python main.py exploit --list
 
 # Start Web Interface
 python main.py web
 
 # Access at http://localhost:8000/web/dashboard
 ```
+
+## Documentation
+
+- [CLI Usage Guide](./docs/01_usage.md) - Complete CLI command reference
+- [Web Interface & API Guide](./docs/02_web_interface.md) - Web UI and REST API documentation
+- [Vulnerability Database Guide](./docs/03_vulnerability_database.md) - CVE scanning, exploit finding, and vulnerability management
+
+## Useful Links
+
+- [Caldera Documentation](https://caldera.readthedocs.io/)
+- [Nmap Guide](https://nmap.org/docs.html)
+- [NVD API](https://nvd.nist.gov/vuln/data-feeds)
+- [CISA KEV Catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
 
 ---
 
