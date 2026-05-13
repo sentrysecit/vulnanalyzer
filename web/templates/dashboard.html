@@ -17,21 +17,21 @@
         <div class="stat-label">Total Scans</div>
         <div class="stat-trend up">↑ 100% completed</div>
     </div>
-    
+
     <div class="stat-card green animate-in animate-in-delay-2">
         <div class="stat-icon green">🎯</div>
         <div class="stat-value text-mono" id="total-targets">0</div>
         <div class="stat-label">Targets Scanned</div>
         <div class="stat-trend" style="color: var(--text-tertiary);">Unique hosts</div>
     </div>
-    
+
     <div class="stat-card orange animate-in animate-in-delay-3">
         <div class="stat-icon orange">⚠️</div>
         <div class="stat-value text-mono" id="total-vulns">0</div>
         <div class="stat-label">Vulnerabilities</div>
         <div class="stat-trend" style="color: var(--text-tertiary);">Detected issues</div>
     </div>
-    
+
     <div class="stat-card red animate-in animate-in-delay-4">
         <div class="stat-icon red">🚨</div>
         <div class="stat-value text-mono" id="critical-count">0</div>
@@ -84,7 +84,6 @@
         <div class="card animate-in" style="animation-delay: 0.3s;">
             <div class="card-header">
                 <h3 class="card-title">
-                    <span>📈</span>
                     Severity Distribution
                 </h3>
             </div>
@@ -117,110 +116,110 @@
 
 {% block extra_js %}
 <script>
-let severityChart = null;
+    let severityChart = null;
 
-function timeAgo(date) {
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    const intervals = [
-        { label: 'y', seconds: 31536000 },
-        { label: 'mo', seconds: 2592000 },
-        { label: 'd', seconds: 86400 },
-        { label: 'h', seconds: 3600 },
-        { label: 'm', seconds: 60 }
-    ];
-    
-    for (const interval of intervals) {
-        const count = Math.floor(seconds / interval.seconds);
-        if (count >= 1) return `${count}${interval.label} ago`;
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        const intervals = [
+            { label: 'y', seconds: 31536000 },
+            { label: 'mo', seconds: 2592000 },
+            { label: 'd', seconds: 86400 },
+            { label: 'h', seconds: 3600 },
+            { label: 'm', seconds: 60 }
+        ];
+
+        for (const interval of intervals) {
+            const count = Math.floor(seconds / interval.seconds);
+            if (count >= 1) return `${count}${interval.label} ago`;
+        }
+        return 'Just now';
     }
-    return 'Just now';
-}
 
-async function loadDashboard() {
-    try {
-        const response = await fetch('/api/scans/stats');
-        const data = await response.json();
-        
-        // Update stats
-        document.getElementById('total-scans').textContent = data.total_scans || 0;
-        document.getElementById('total-targets').textContent = data.total_targets || 0;
-        document.getElementById('total-vulns').textContent = data.total_vulnerabilities || 0;
-        document.getElementById('critical-count').textContent = data.vulnerabilities_by_severity?.critical || 0;
-        
-        // Severity Chart
-        const severityData = data.vulnerabilities_by_severity || {
-            critical: 0, high: 0, medium: 0, low: 0, info: 0
-        };
-        
-        const ctx = document.getElementById('severityChart').getContext('2d');
-        
-        if (severityChart) {
-            severityChart.data.datasets[0].data = [
-                severityData.critical,
-                severityData.high,
-                severityData.medium,
-                severityData.low,
-                severityData.info
-            ];
-            severityChart.update();
-        } else {
-            severityChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
-                    datasets: [{
-                        data: [
-                            severityData.critical,
-                            severityData.high,
-                            severityData.medium,
-                            severityData.low,
-                            severityData.info
-                        ],
-                        backgroundColor: ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#0071e3'],
-                        borderWidth: 0,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#6e6e73',
-                                font: { family: "'DM Sans', sans-serif", size: 12 },
-                                padding: 16,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
+    async function loadDashboard() {
+        try {
+            const response = await fetch('/api/scans/stats');
+            const data = await response.json();
+
+            // Update stats
+            document.getElementById('total-scans').textContent = data.total_scans || 0;
+            document.getElementById('total-targets').textContent = data.total_targets || 0;
+            document.getElementById('total-vulns').textContent = data.total_vulnerabilities || 0;
+            document.getElementById('critical-count').textContent = data.vulnerabilities_by_severity?.critical || 0;
+
+            // Severity Chart
+            const severityData = data.vulnerabilities_by_severity || {
+                critical: 0, high: 0, medium: 0, low: 0, info: 0
+            };
+
+            const ctx = document.getElementById('severityChart').getContext('2d');
+
+            if (severityChart) {
+                severityChart.data.datasets[0].data = [
+                    severityData.critical,
+                    severityData.high,
+                    severityData.medium,
+                    severityData.low,
+                    severityData.info
+                ];
+                severityChart.update();
+            } else {
+                severityChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
+                        datasets: [{
+                            data: [
+                                severityData.critical,
+                                severityData.high,
+                                severityData.medium,
+                                severityData.low,
+                                severityData.info
+                            ],
+                            backgroundColor: ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#0071e3'],
+                            borderWidth: 0,
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#6e6e73',
+                                    font: { family: "'DM Sans', sans-serif", size: 12 },
+                                    padding: 16,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1d1d1f',
+                                titleColor: '#ffffff',
+                                bodyColor: '#86868b',
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: true
                             }
-                        },
-                        tooltip: {
-                            backgroundColor: '#1d1d1f',
-                            titleColor: '#ffffff',
-                            bodyColor: '#86868b',
-                            padding: 12,
-                            cornerRadius: 8,
-                            displayColors: true
                         }
                     }
-                }
-            });
-        }
-        
-        // Top Vulnerable
-        const topVulnContainer = document.getElementById('top-vulnerable');
-        if (!data.top_vulnerable_targets || data.top_vulnerable_targets.length === 0) {
-            topVulnContainer.innerHTML = `
+                });
+            }
+
+            // Top Vulnerable
+            const topVulnContainer = document.getElementById('top-vulnerable');
+            if (!data.top_vulnerable_targets || data.top_vulnerable_targets.length === 0) {
+                topVulnContainer.innerHTML = `
                 <div class="empty-state" style="padding: 40px 20px;">
                     <div class="empty-icon">🛡️</div>
                     <div class="empty-title">No vulnerabilities found</div>
                     <div class="empty-description">Your targets are secure</div>
                 </div>
             `;
-        } else {
-            topVulnContainer.innerHTML = data.top_vulnerable_targets.slice(0, 5).map((t, i) => `
+            } else {
+                topVulnContainer.innerHTML = data.top_vulnerable_targets.slice(0, 5).map((t, i) => `
                 <a href="/web/scans" style="
                     display: flex;
                     justify-content: space-between;
@@ -249,12 +248,12 @@ async function loadDashboard() {
                     <span class="badge badge-red">${t.vulnerabilities}</span>
                 </a>
             `).join('');
-        }
-        
-        // Recent Scans
-        const recentScansContainer = document.getElementById('recent-scans');
-        if (!data.recent_scans || data.recent_scans.length === 0) {
-            recentScansContainer.innerHTML = `
+            }
+
+            // Recent Scans
+            const recentScansContainer = document.getElementById('recent-scans');
+            if (!data.recent_scans || data.recent_scans.length === 0) {
+                recentScansContainer.innerHTML = `
                 <tr>
                     <td colspan="5">
                         <div class="empty-state">
@@ -266,8 +265,8 @@ async function loadDashboard() {
                     </td>
                 </tr>
             `;
-        } else {
-            recentScansContainer.innerHTML = data.recent_scans.map(scan => `
+            } else {
+                recentScansContainer.innerHTML = data.recent_scans.map(scan => `
                 <tr>
                     <td>
                         <span class="text-mono" style="font-weight: 500;">${scan.target}</span>
@@ -291,14 +290,14 @@ async function loadDashboard() {
                     </td>
                 </tr>
             `).join('');
-        }
-        
-    } catch (error) {
-        console.error('Error loading dashboard:', error);
-    }
-}
+            }
 
-loadDashboard();
-setInterval(loadDashboard, 30000);
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 30000);
 </script>
 {% endblock %}

@@ -18,12 +18,12 @@
         </div>
         <div class="card-body">
             <div style="margin-bottom: 20px;">
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     URL
                 </label>
-                <input type="text" class="form-input" id="target" 
-                       placeholder="http://example.com or https://example.com"
-                       style="font-size: 16px; padding: 16px;">
+                <input type="text" class="form-input" id="target"
+                    placeholder="http://example.com or https://example.com" style="font-size: 16px; padding: 16px;">
                 <div style="font-size: 13px; color: var(--text-tertiary); margin-top: 8px;">
                     Enter full URL including protocol (http:// or https://)
                 </div>
@@ -40,23 +40,27 @@
         </div>
         <div class="card-body">
             <div style="margin-bottom: 16px;">
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Select Wordlist
                 </label>
                 <select class="form-input" id="wordlist" style="font-size: 16px; padding: 16px;">
                     <option value="">Default (common.txt - quick scan)</option>
-                    <option value="/usr/share/seclists/Discovery/Web-Content/common.txt">Small (common.txt - ~4600 entries)</option>
-                    <option value="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt">Medium (~22000 entries)</option>
-                    <option value="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-large.txt">Large (~370000 entries)</option>
+                    <option value="/usr/share/seclists/Discovery/Web-Content/common.txt">Small (common.txt - ~4600
+                        entries)</option>
+                    <option value="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt">Medium
+                        (~22000 entries)</option>
+                    <option value="/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-large.txt">Large
+                        (~370000 entries)</option>
                 </select>
             </div>
             <div>
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Custom Wordlist Path
                 </label>
-                <input type="text" class="form-input" id="custom_wordlist" 
-                       placeholder="/path/to/custom/wordlist.txt"
-                       style="font-size: 14px; padding: 12px;">
+                <input type="text" class="form-input" id="custom_wordlist" placeholder="/path/to/custom/wordlist.txt"
+                    style="font-size: 14px; padding: 12px;">
             </div>
         </div>
     </div>
@@ -71,20 +75,20 @@
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div>
-                    <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                    <label
+                        style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                         Threads
                     </label>
-                    <input type="number" class="form-input" id="threads" 
-                           value="40" min="1" max="200"
-                           style="font-size: 16px; padding: 12px;">
+                    <input type="number" class="form-input" id="threads" value="40" min="1" max="200"
+                        style="font-size: 16px; padding: 12px;">
                 </div>
                 <div>
-                    <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                    <label
+                        style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                         Extensions
                     </label>
-                    <input type="text" class="form-input" id="extensions" 
-                           placeholder=".php,.html,.txt"
-                           style="font-size: 14px; padding: 12px;">
+                    <input type="text" class="form-input" id="extensions" placeholder=".php,.html,.txt"
+                        style="font-size: 14px; padding: 12px;">
                 </div>
             </div>
             <div style="margin-top: 16px;">
@@ -96,8 +100,10 @@
         </div>
     </div>
 
-    <button class="btn btn-primary animate-in" style="animation-delay: 0.25s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn" onclick="submitFuzz()">
-        <span>🚀</span> Start Fuzzing
+    <button class="btn btn-primary animate-in"
+        style="animation-delay: 0.25s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn"
+        onclick="submitFuzz()">
+        Start Fuzzing
     </button>
 
     <div id="result" style="display: none; margin-top: 24px;"></div>
@@ -106,51 +112,51 @@
 
 {% block extra_js %}
 <script>
-async function submitFuzz() {
-    let target = document.getElementById('target').value.trim();
-    let wordlist = document.getElementById('wordlist').value;
-    const customWordlist = document.getElementById('custom_wordlist').value.trim();
-    
-    if (customWordlist) {
-        wordlist = customWordlist;
-    }
-    
-    if (!target) {
-        alert('Please enter a target URL');
-        return;
-    }
-    
-    if (!target.startsWith('http://') && !target.startsWith('https://')) {
-        alert('Please enter a URL with http:// or https://');
-        return;
-    }
-    
-    const submitBtn = document.getElementById('submit-btn');
-    const resultDiv = document.getElementById('result');
-    const threads = parseInt(document.getElementById('threads').value) || 40;
-    const extensions = document.getElementById('extensions').value.trim() || null;
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Running...';
-    resultDiv.style.display = 'none';
-    
-    try {
-        const response = await fetch('/api/enum/fuzz', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                target, 
-                wordlist: wordlist || null,
-                threads,
-                extensions
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
+    async function submitFuzz() {
+        let target = document.getElementById('target').value.trim();
+        let wordlist = document.getElementById('wordlist').value;
+        const customWordlist = document.getElementById('custom_wordlist').value.trim();
+
+        if (customWordlist) {
+            wordlist = customWordlist;
+        }
+
+        if (!target) {
+            alert('Please enter a target URL');
+            return;
+        }
+
+        if (!target.startsWith('http://') && !target.startsWith('https://')) {
+            alert('Please enter a URL with http:// or https://');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        const resultDiv = document.getElementById('result');
+        const threads = parseInt(document.getElementById('threads').value) || 40;
+        const extensions = document.getElementById('extensions').value.trim() || null;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Running...';
+        resultDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/enum/fuzz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target,
+                    wordlist: wordlist || null,
+                    threads,
+                    extensions
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
                 <div class="card" style="border-color: var(--accent-green);">
                     <div class="card-body" style="padding: 28px;">
                         <div style="display: flex; align-items: center; gap: 16px;">
@@ -164,14 +170,14 @@ async function submitFuzz() {
                     </div>
                 </div>
             `;
-            document.getElementById('target').value = '';
-        } else {
-            throw new Error(data.detail || 'Failed to start fuzzing');
-        }
-        
-    } catch (error) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
+                document.getElementById('target').value = '';
+            } else {
+                throw new Error(data.detail || 'Failed to start fuzzing');
+            }
+
+        } catch (error) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
             <div class="card" style="border-color: var(--accent-red);">
                 <div class="card-body" style="padding: 28px;">
                     <div style="display: flex; align-items: center; gap: 16px;">
@@ -184,16 +190,18 @@ async function submitFuzz() {
                 </div>
             </div>
         `;
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🚀</span> Start Fuzzing';
     }
-    
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span>🚀</span> Start Fuzzing';
-}
 </script>
 
 <style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 {% endblock %}

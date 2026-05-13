@@ -20,12 +20,12 @@
         </div>
         <div class="card-body">
             <div style="margin-bottom: 20px;">
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Target Address
                 </label>
-                <input type="text" class="form-input" id="target" 
-                       placeholder="192.168.1.1, example.com, 10.0.0.0/24"
-                       style="font-size: 16px; padding: 16px;">
+                <input type="text" class="form-input" id="target" placeholder="192.168.1.1, example.com, 10.0.0.0/24"
+                    style="font-size: 16px; padding: 16px;">
                 <div style="font-size: 13px; color: var(--text-tertiary); margin-top: 8px;">
                     Enter an IP address, domain name, or network range in CIDR notation
                 </div>
@@ -58,7 +58,7 @@
                     <div style="font-weight: 600; margin-bottom: 4px;">Quick</div>
                     <div style="font-size: 12px; color: var(--text-tertiary);">Common ports only</div>
                 </label>
-                
+
                 <label class="scan-option selected" style="
                     display: block;
                     padding: 20px;
@@ -74,7 +74,7 @@
                     <div style="font-weight: 600; margin-bottom: 4px;">Full</div>
                     <div style="font-size: 12px; color: var(--text-tertiary);">All ports + OS</div>
                 </label>
-                
+
                 <label class="scan-option" style="
                     display: block;
                     padding: 20px;
@@ -95,8 +95,10 @@
     </div>
 
     <!-- Submit Button -->
-    <button class="btn btn-primary animate-in" style="animation-delay: 0.2s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn" onclick="submitScan()">
-        <span>🚀</span> Launch Scan
+    <button class="btn btn-primary animate-in"
+        style="animation-delay: 0.2s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn"
+        onclick="submitScan()">
+        Launch Scan
     </button>
 
     <!-- Result -->
@@ -106,60 +108,60 @@
 
 {% block extra_js %}
 <style>
-.scan-option:hover {
-    border-color: var(--accent-blue) !important;
-    background: var(--accent-blue-light) !important;
-}
+    .scan-option:hover {
+        border-color: var(--accent-blue) !important;
+        background: var(--accent-blue-light) !important;
+    }
 
-.scan-option.selected {
-    border-color: var(--accent-blue);
-    background: var(--accent-blue-light);
-}
+    .scan-option.selected {
+        border-color: var(--accent-blue);
+        background: var(--accent-blue-light);
+    }
 </style>
 
 <script>
-let selectedScanType = 'full';
+    let selectedScanType = 'full';
 
-function selectScanType(type, element) {
-    selectedScanType = type;
-    document.querySelectorAll('.scan-option').forEach(el => {
-        el.classList.remove('selected');
-        el.style.background = 'var(--bg-primary)';
-        el.style.borderColor = 'var(--border-light)';
-    });
-    element.classList.add('selected');
-    element.style.background = 'var(--accent-blue-light)';
-    element.style.borderColor = 'var(--accent-blue)';
-    element.querySelector('input').checked = true;
-}
-
-async function submitScan() {
-    const target = document.getElementById('target').value.trim();
-    
-    if (!target) {
-        alert('Please enter a target');
-        return;
-    }
-    
-    const submitBtn = document.getElementById('submit-btn');
-    const resultDiv = document.getElementById('result');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Launching...';
-    resultDiv.style.display = 'none';
-    
-    try {
-        const response = await fetch('/api/scans', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target, scan_type: selectedScanType })
+    function selectScanType(type, element) {
+        selectedScanType = type;
+        document.querySelectorAll('.scan-option').forEach(el => {
+            el.classList.remove('selected');
+            el.style.background = 'var(--bg-primary)';
+            el.style.borderColor = 'var(--border-light)';
         });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
+        element.classList.add('selected');
+        element.style.background = 'var(--accent-blue-light)';
+        element.style.borderColor = 'var(--accent-blue)';
+        element.querySelector('input').checked = true;
+    }
+
+    async function submitScan() {
+        const target = document.getElementById('target').value.trim();
+
+        if (!target) {
+            alert('Please enter a target');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        const resultDiv = document.getElementById('result');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Launching...';
+        resultDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/scans', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target, scan_type: selectedScanType })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
                 <div class="card" style="border-color: var(--accent-green);">
                     <div class="card-body" style="padding: 28px;">
                         <div style="display: flex; align-items: center; gap: 16px;">
@@ -177,14 +179,14 @@ async function submitScan() {
                     </div>
                 </div>
             `;
-            document.getElementById('target').value = '';
-        } else {
-            throw new Error(data.detail || 'Failed to create scan');
-        }
-        
-    } catch (error) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
+                document.getElementById('target').value = '';
+            } else {
+                throw new Error(data.detail || 'Failed to create scan');
+            }
+
+        } catch (error) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
             <div class="card" style="border-color: var(--accent-red);">
                 <div class="card-body" style="padding: 28px;">
                     <div style="display: flex; align-items: center; gap: 16px;">
@@ -197,16 +199,18 @@ async function submitScan() {
                 </div>
             </div>
         `;
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🚀</span> Launch Scan';
     }
-    
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span>🚀</span> Launch Scan';
-}
 </script>
 
 <style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 {% endblock %}
