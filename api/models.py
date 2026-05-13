@@ -106,3 +106,38 @@ class PathResult(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     fuzz = relationship("PathFuzz", back_populates="results")
+
+
+class Vulnerability(Base):
+    __tablename__ = "vulnerabilities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    scan_type = Column(String(50), nullable=True)
+    scan_id = Column(Integer, nullable=True)
+    enum_id = Column(Integer, nullable=True)
+    host = Column(String(255), nullable=True)
+    subdomain = Column(String(255), nullable=True)
+    service = Column(String(100), nullable=True)
+    port = Column(Integer, nullable=True)
+    cve_id = Column(String(20), nullable=True, index=True)
+    title = Column(String(255), nullable=True)
+    severity = Column(String(20), nullable=True)
+    cvss_score = Column(String(10), nullable=True)
+    is_exploited = Column(Boolean, default=False)
+    exploit_available = Column(Boolean, default=False)
+    edb_id = Column(String(20), nullable=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def severity_level(self):
+        sev = self.severity.lower() if self.severity else ""
+        if sev == "critical":
+            return 5
+        elif sev == "high":
+            return 4
+        elif sev == "medium":
+            return 3
+        elif sev == "low":
+            return 2
+        return 1

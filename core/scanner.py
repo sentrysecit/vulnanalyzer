@@ -10,21 +10,25 @@ from modules.fingerprints.service_fingerprints import (
 
 
 class VulnerabilityScanner:
-    def __init__(self, target, scan_type="full", threads=10):
+    def __init__(
+        self, target, scan_type="full", threads=10, check_cve=True, find_exploits=False
+    ):
         self.target = parse_target(target)
         self.scan_type = scan_type
         self.threads = threads
+        self.check_cve = check_cve
+        self.find_exploits = find_exploits
         self.results = {}
         self.nm = nmap.PortScanner()
+        self.cve_results = []
 
     def scan_network(self):
         print(f"[*] Starting network scan on {self.target}")
 
-        # Define scan types
         scan_types = {
-            "quick": "-F -T4",  # Quick scan
-            "full": "-sS -sV -O -A -T4",  # Full scan with OS detection
-            "stealth": "-sS -T2",  # Stealth scanning
+            "quick": "-F -T4",
+            "full": "-sS -sV -O -A -T4",
+            "stealth": "-sS -T2",
         }
 
         args = scan_types.get(self.scan_type, scan_types["full"])
@@ -65,10 +69,104 @@ class VulnerabilityScanner:
 
         return self.results
 
+    def detect_vulnerabilities(self):
+        if not self.check_cve:
+            return
+
+        print("[*] Detecting vulnerabilities (CVE scan)...")
+
+        try:
+            from core.cve_scanner import CVEScanner
+
+            scanner = CVEScanner()
+            services_info = []
+
+            for host in self.results:
+                for port, port_data in self.results[host].get("ports", {}).items():
+                    if port_data.get("state") != "open":
+                        continue
+
+                    service = port_data.get("service", "")
+                    version = port_data.get("version", "")
+
+                    if service:
+                        services_info.append(
+                            {
+                                "host": host,
+                                "port": port,
+                                "service": service,
+                                "version": version,
+                            }
+                        )
+
+            if not services_info:
+                print("[*] No services to check for vulnerabilities")
+                return
+
+            self.cve_results = scanner.detect_vulnerabilities(services_info)
+
+            for vuln in self.cve_results:
+                host = vuln.get("host")
+                cve_id = vuln.get("cve_id")
+
+                cve_details = scanner.check_cve(cve_id) if cve_id else {}
+
+                vuln_entry = {
+                    "type": "cve",
+                    "cve_id": cve_id,
+                    "title": cve_details.get("description", f"CVE {cve_id}"),
+                    "description": cve_details.get("description", ""),
+                    "service": vuln.get("service"),
+                    "version": vuln.get("version"),
+                    "port": vuln.get("port"),
+                    "cvss_score": cve_details.get("cvss_score")
+                    or vuln.get("cvss_score"),
+                    "severity": cve_details.get("severity") or vuln.get("severity"),
+                    "is_exploited": cve_details.get(
+                        "is_exploited", vuln.get("is_exploited", False)
+                    ),
+                    "published": cve_details.get("published"),
+                    "recommendation": self._get_recommendation(
+                        cve_id, vuln.get("service")
+                    ),
+                }
+
+                if host in self.results:
+                    self.results[host]["vulnerabilities"].append(vuln_entry)
+
+        except ImportError as e:
+            print(f"[!] CVE scanner module not available: {e}")
+        except Exception as e:
+            print(f"[!] Error detecting vulnerabilities: {e}")
+
+    def find_exploits_for_vulns(self):
+        if not self.find_exploits or not self.cve_results:
+            return
+
+        print("[*] Searching for available exploits...")
+
+        try:
+            from core.exploit_finder import ExploitFinder
+
+            finder = ExploitFinder()
+            cve_ids = list(
+                set(v.get("cve_id") for v in self.cve_results if v.get("cve_id"))
+            )
+
+            for host in self.results:
+                for vuln in self.results[host]["vulnerabilities"]:
+                    if vuln.get("type") == "cve":
+                        cve_id = vuln.get("cve_id")
+                        exploits = finder.search_by_cve(cve_id)
+                        vuln["exploits"] = exploits if exploits else []
+
+        except ImportError as e:
+            print(f"[!] Exploit finder module not available: {e}")
+        except Exception as e:
+            print(f"[!] Error finding exploits: {e}")
+
     def scan_web_vulnerabilities(self, urls=None):
-        """Scans web vulnerabilities on the provided URLs"""
         if not urls:
-            # Extract URLs from scanned hosts with web ports (80, 443, 8080, etc.)
             urls = []
             web_ports = [80, 443, 8080, 8443, 8000, 8888]
 
@@ -78,12 +176,14 @@ class VulnerabilityScanner:
                         protocol = "https" if port in [443, 8443] else "http"
                         urls.append(f"{protocol}://{host}:{port}")
 
-        print(f"[*] Scanning web vulnerabilities is {len(urls)} URLs")
+        if not urls:
+            return self.results
+
+        print(f"[*] Scanning web vulnerabilities for {len(urls)} URLs")
 
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             web_results = list(executor.map(self._scan_single_web_target, urls))
 
-        # Procesar y agregar resultados
         for url, result in zip(urls, web_results):
             host = url.split("://")[1].split(":")[0]
             if host in self.results:
@@ -92,14 +192,12 @@ class VulnerabilityScanner:
         return self.results
 
     def _scan_single_web_target(self, url):
-        """Scans a single URL for web vulnerabilities"""
         result = {
             "url": url,
             "technologies": detect_web_technology(url),
             "vulnerabilities": [],
         }
 
-        # Check security headers
         try:
             response = requests.get(url, timeout=10, verify=False)
             headers = response.headers
@@ -127,8 +225,69 @@ class VulnerabilityScanner:
 
         return result
 
+    def get_vulnerability_summary(self):
+        summary = {
+            "total": 0,
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "exploited": 0,
+        }
+
+        for host in self.results:
+            for vuln in self.results[host].get("vulnerabilities", []):
+                summary["total"] += 1
+
+                if vuln.get("type") == "cve":
+                    score = vuln.get("cvss_score", 0)
+                    if score >= 9.0:
+                        summary["critical"] += 1
+                    elif score >= 7.0:
+                        summary["high"] += 1
+                    elif score >= 4.0:
+                        summary["medium"] += 1
+                    else:
+                        summary["low"] += 1
+
+                    if vuln.get("is_exploited"):
+                        summary["exploited"] += 1
+
+        return summary
+
     def run(self):
-        """Run the full scan"""
         self.scan_network()
+
+        if self.check_cve or self.find_exploits:
+            self.detect_vulnerabilities()
+
+        if self.find_exploits:
+            self.find_exploits_for_vulns()
+
         self.scan_web_vulnerabilities()
         return self.results
+
+    def _get_recommendation(self, cve_id, service):
+        if not cve_id:
+            return "Update the service to the latest version."
+
+        recommendations = {
+            "apache": "Update Apache to the latest version. Consider using ModSecurity for additional protection.",
+            "nginx": "Update Nginx to the latest version. Review configuration for security best practices.",
+            "openssh": "Update OpenSSH to the latest version. Disable weak ciphers and algorithms.",
+            "mysql": "Update MySQL to the latest version. Review user privileges and grant only necessary permissions.",
+            "postgresql": "Update PostgreSQL to the latest version. Review pg_hba.conf for secure access control.",
+            "redis": "Update Redis to the latest version. Enable AUTH and use TLS for connections.",
+            "wordpress": "Update WordPress, themes, and plugins. Remove unused plugins. Implement WAF.",
+            "drupal": "Update Drupal core and modules. Follow Drupal security best practices.",
+            "tomcat": "Update Apache Tomcat. Disable manager interface in production. Use secure session cookies.",
+            "iis": "Apply Microsoft security updates. Review URL authorization rules.",
+        }
+
+        service_lower = service.lower() if service else ""
+
+        for key, rec in recommendations.items():
+            if key in service_lower:
+                return f"[{service}] {rec}"
+
+        return f"Review CVE {cve_id} and apply vendor-supplied patches or mitigations. Check https://nvd.nist.gov/vuln/detail/{cve_id} for details."

@@ -105,12 +105,18 @@ def run_ffuf_subdomain(
 
     cmd = [
         "ffuf",
-        "-u", f"http://{domain}",
-        "-H", f"Host: FUZZ.{domain}",
-        "-w", wordlist,
-        "-fs", wildcard_size,
-        "-mc", "200,301,302,400",
-        "-t", str(threads),
+        "-u",
+        f"http://{domain}",
+        "-H",
+        f"Host: FUZZ.{domain}",
+        "-w",
+        wordlist,
+        "-fs",
+        wildcard_size,
+        "-mc",
+        "200,301,302,400",
+        "-t",
+        str(threads),
     ]
 
     if silent:
@@ -187,13 +193,17 @@ class SubdomainEnumerator:
         output=None,
         output_dir=None,
         enum_id=None,
+        check_cve=False,
+        find_exploits=False,
     ):
         self.target = clean_domain(target)
         self.wordlist = wordlist or DEFAULT_WORDLIST
         self.threads = threads
         self.use_httpx = use_httpx
         self.use_nuclei = use_nuclei
-        
+        self.check_cve = check_cve
+        self.find_exploits = find_exploits
+
         output_dir = output_dir or "tools/fuzzing"
         if output:
             self.output = output
@@ -201,17 +211,97 @@ class SubdomainEnumerator:
             self.output = os.path.join(output_dir, f"subdomains_{enum_id}.txt")
         else:
             self.output = os.path.join(output_dir, "subdomains.txt")
-            
+
         if enum_id:
-            self.alive_output = os.path.join(output_dir, f"subdomains_{enum_id}_alive.txt")
+            self.alive_output = os.path.join(
+                output_dir, f"subdomains_{enum_id}_alive.txt"
+            )
         else:
             self.alive_output = os.path.join(output_dir, "subdomains_alive.txt")
-            
+
         self.results = {
             "all": [],
             "alive": [],
             "found": False,
+            "vulnerabilities": [],
         }
+
+    def detect_vulnerabilities(self):
+        if not self.check_cve or not self.results["alive"]:
+            return
+
+        print("[*] Detecting vulnerabilities for alive hosts...")
+
+        try:
+            from core.cve_scanner import CVEScanner
+
+            scanner = CVEScanner()
+            services_info = []
+
+            for host_url in self.results["alive"]:
+                host = (
+                    host_url.replace("http://", "")
+                    .replace("https://", "")
+                    .split(":")[0]
+                    .split("/")[0]
+                )
+                services_info.append(
+                    {
+                        "host": host,
+                        "subdomain": host_url,
+                        "service": "http",
+                        "version": "",
+                    }
+                )
+
+            vulns = scanner.detect_vulnerabilities(services_info)
+            self.results["vulnerabilities"] = vulns
+
+            for vuln in vulns:
+                cve_id = vuln.get("cve_id")
+                cve_details = scanner.check_cve(cve_id) if cve_id else {}
+
+                vuln["description"] = cve_details.get("description", "")
+                vuln["title"] = cve_details.get("description", f"CVE {cve_id}")
+                vuln["is_exploited"] = cve_details.get(
+                    "is_exploited", vuln.get("is_exploited", False)
+                )
+
+                print(
+                    f"    [+] {cve_id} ({cve_details.get('severity', 'N/A')}) - {vuln.get('service')}"
+                )
+
+        except Exception as e:
+            print(f"[!] Error detecting vulnerabilities: {e}")
+
+    def find_exploits_for_vulns(self):
+        if not self.find_exploits or not self.results["vulnerabilities"]:
+            return
+
+        print("[*] Searching for available exploits...")
+
+        try:
+            from core.exploit_finder import ExploitFinder
+
+            finder = ExploitFinder()
+            cve_ids = list(
+                set(
+                    v.get("cve_id")
+                    for v in self.results["vulnerabilities"]
+                    if v.get("cve_id")
+                )
+            )
+
+            for vuln in self.results["vulnerabilities"]:
+                cve_id = vuln.get("cve_id")
+                if cve_id:
+                    exploits = finder.search_by_cve(cve_id)
+                    vuln["exploits"] = exploits if exploits else []
+                    if exploits:
+                        print(f"    [+] {cve_id}: {len(exploits)} exploit(s) found")
+
+        except Exception as e:
+            print(f"[!] Error finding exploits: {e}")
 
     def run(self):
         print(f"\n=== Subdomain Enumeration: {self.target} ===\n")
@@ -247,6 +337,12 @@ class SubdomainEnumerator:
                 print("[!] No hay hosts vivos")
         else:
             alive_file = self.output
+
+        if self.check_cve or self.find_exploits:
+            self.detect_vulnerabilities()
+
+        if self.find_exploits:
+            self.find_exploits_for_vulns()
 
         if self.use_nuclei and self.results["alive"]:
             run_nuclei(alive_file)

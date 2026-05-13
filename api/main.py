@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from api.database import init_db
-from api.routers import scans, reports, enum
+from api.routers import scans, reports, enum, vulns
 
 app = FastAPI(
     title="VulnAnalyzer API",
@@ -24,6 +24,7 @@ app.add_middleware(
 app.include_router(scans.router)
 app.include_router(reports.router)
 app.include_router(enum.router)
+app.include_router(vulns.router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
