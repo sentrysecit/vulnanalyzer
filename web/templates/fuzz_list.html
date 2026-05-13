@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Path Fuzzing Results - VulnAnalyzer{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <h1 class="page-title">Path Fuzzing</h1>
+    <p class="page-subtitle">View all path fuzzing results</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+    <a href="/web/fuzz/new" class="btn btn-primary">
+        <span>➕</span> New Fuzzing
+    </a>
+</div>
+
+<div class="card animate-in" style="animation-delay: 0.1s;">
+    <div class="card-body" style="padding: 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-secondary);">
+                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">ID</th>
+                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Target</th>
+                    <th style="padding: 16px; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Paths Found</th>
+                    <th style="padding: 16px; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Status</th>
+                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Date</th>
+                    <th style="padding: 16px; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="fuzz-list">
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
+                        Loading...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadFuzzList() {
+    try {
+        const response = await fetch('/api/enum/fuzz');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('fuzz-list');
+        
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
+                        No fuzzing jobs yet. <a href="/web/fuzz/new" style="color: var(--accent-blue);">Start one</a>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = data.map(f => `
+            <tr style="border-top: 1px solid var(--border-light);">
+                <td style="padding: 16px; font-weight: 600;">#${f.id}</td>
+                <td style="padding: 16px;">
+                    <span class="text-mono" style="color: var(--accent-blue);">${f.target}</span>
+                </td>
+                <td style="padding: 16px; text-align: center;">${f.total_found}</td>
+                <td style="padding: 16px; text-align: center;">
+                    <span class="status-badge" data-status="${f.status}">${f.status}</span>
+                </td>
+                <td style="padding: 16px; font-size: 13px; color: var(--text-secondary);">
+                    ${f.created_at ? new Date(f.created_at).toLocaleDateString() : '-'}
+                </td>
+                <td style="padding: 16px; text-align: center;">
+                    <a href="/web/enum/fuzz/${f.id}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                        View
+                    </a>
+                </td>
+            </tr>
+        `).join('');
+        
+        document.querySelectorAll('.status-badge').forEach(el => {
+            const status = el.dataset.status;
+            if (status === 'completed') {
+                el.style.background = 'var(--accent-green-light)';
+                el.style.color = 'var(--accent-green)';
+            } else if (status === 'running') {
+                el.style.background = 'var(--accent-blue-light)';
+                el.style.color = 'var(--accent-blue)';
+            } else if (status === 'failed') {
+                el.style.background = 'var(--accent-red-light)';
+                el.style.color = 'var(--accent-red)';
+            } else {
+                el.style.background = 'var(--bg-secondary)';
+                el.style.color = 'var(--text-secondary)';
+            }
+            el.style.padding = '4px 12px';
+            el.style.borderRadius = '20px';
+            el.style.fontSize = '12px';
+            el.style.fontWeight = '500';
+            el.style.display = 'inline-block';
+        });
+        
+    } catch (error) {
+        console.error('Error loading fuzz list:', error);
+    }
+}
+
+loadFuzzList();
+</script>
+{% endblock %}

@@ -83,6 +83,52 @@ def main():
     )
     caldera_parser.add_argument("--adversary", help="Name of the opponent to use")
 
+    # Subdomain enumeration command
+    subdomain_parser = subparsers.add_parser(
+        "subdomain", help="Enumerate subdomains"
+    )
+    subdomain_parser.add_argument(
+        "target", help="Domain to enumerate (e.g., example.com)"
+    )
+    subdomain_parser.add_argument(
+        "--wordlist", "-w", help="Wordlist for subdomain fuzzing (default: seclists medium)"
+    )
+    subdomain_parser.add_argument(
+        "--output", "-o", help="Output file for results (default: subdomains.txt)"
+    )
+    subdomain_parser.add_argument(
+        "--threads", "-t", type=int, default=40, help="Number of threads (default: 40)"
+    )
+    subdomain_parser.add_argument(
+        "--nuclei", action="store_true", help="Run nuclei on discovered hosts"
+    )
+    subdomain_parser.add_argument(
+        "--silent", action="store_true", help="Minimal output"
+    )
+
+    # Path fuzzing command
+    fuzz_parser = subparsers.add_parser(
+        "fuzz", help="Directory/path fuzzing"
+    )
+    fuzz_parser.add_argument(
+        "target", help="URL or host to fuzz (e.g., http://example.com)"
+    )
+    fuzz_parser.add_argument(
+        "--wordlist", "-w", help="Wordlist for path fuzzing (default: common.txt)"
+    )
+    fuzz_parser.add_argument(
+        "--output", "-o", help="Output file for results (default: paths.txt)"
+    )
+    fuzz_parser.add_argument(
+        "--threads", "-t", type=int, default=40, help="Number of threads (default: 40)"
+    )
+    fuzz_parser.add_argument(
+        "--extensions", "-e", help="File extensions to try (e.g., .php,.html)"
+    )
+    fuzz_parser.add_argument(
+        "--silent", action="store_true", help="Minimal output"
+    )
+
     # Web command
     web_parser = subparsers.add_parser("web", help="Start the web interface")
     web_parser.add_argument(
@@ -142,6 +188,50 @@ def main():
             print(f"[+] Results saved in {args.output}")
         else:
             print(json.dumps({"active_hosts": hosts}, indent=4))
+
+    # Handle Subdomain Command
+    elif args.command == "subdomain":
+        from core.subdomain_enum import SubdomainEnumerator
+
+        print(f"[*] Starting subdomain enumeration on {args.target}")
+        enumerator = SubdomainEnumerator(
+            target=args.target,
+            wordlist=args.wordlist,
+            threads=args.threads,
+            use_httpx=True,
+            use_nuclei=args.nuclei,
+            output=args.output,
+        )
+        results = enumerator.run()
+
+        if args.output:
+            with open(args.output, "w") as f:
+                json.dump(results, f, indent=4)
+            print(f"[+] Results saved in {args.output}")
+        else:
+            print(json.dumps(results, indent=4))
+
+    # Handle Fuzz Command
+    elif args.command == "fuzz":
+        from core.path_fuzz import PathFuzzer
+
+        print(f"[*] Starting path fuzzing on {args.target}")
+        extensions = args.extensions.split(",") if args.extensions else None
+        fuzzer = PathFuzzer(
+            target=args.target,
+            wordlist=args.wordlist,
+            extensions=extensions,
+            threads=args.threads,
+            output=args.output,
+        )
+        results = fuzzer.run()
+
+        if args.output:
+            with open(args.output, "w") as f:
+                json.dump(results, f, indent=4)
+            print(f"[+] Results saved in {args.output}")
+        else:
+            print(json.dumps(results, indent=4))
 
     # Manage exploitation command #2
     elif args.command == "exploit":

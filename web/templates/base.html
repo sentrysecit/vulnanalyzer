@@ -659,6 +659,26 @@
                     <span class="nav-icon">➕</span>
                     <span>New Scan</span>
                 </a>
+
+                <a href="/web/subdomain/new" class="nav-item {% if '/web/subdomain/new' in request.url.path %}active{% endif %}">
+                    <span class="nav-icon">🌐</span>
+                    <span>New Subdomain</span>
+                </a>
+
+                <a href="/web/enum/subdomains" class="nav-item {% if '/web/enum/subdomains' in request.url.path %}active{% endif %}">
+                    <span class="nav-icon">🌍</span>
+                    <span>Subdomain List</span>
+                </a>
+
+                <a href="/web/fuzz/new" class="nav-item {% if '/web/fuzz/new' in request.url.path %}active{% endif %}">
+                    <span class="nav-icon">📁</span>
+                    <span>New Fuzzing</span>
+                </a>
+
+                <a href="/web/enum/fuzz" class="nav-item {% if '/web/enum/fuzz' in request.url.path %}active{% endif %}">
+                    <span class="nav-icon">🔍</span>
+                    <span>Fuzzing List</span>
+                </a>
                 
                 <div class="nav-divider"></div>
                 

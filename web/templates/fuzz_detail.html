@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Fuzzing Details - VulnAnalyzer{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <h1 class="page-title">Path Fuzzing</h1>
+    <p class="page-subtitle">Details for fuzzing job #{{ fuzz_id }}</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+    <a href="/web/enum/fuzz" class="btn btn-secondary">
+        <span>←</span> Back to List
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="card animate-in" style="animation-delay: 0.1s;">
+        <div class="card-body" style="text-align: center; padding: 24px;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--accent-blue);" id="total-count">-</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Paths Found</div>
+        </div>
+    </div>
+    
+    <div class="card animate-in" style="animation-delay: 0.15s;">
+        <div class="card-body" style="text-align: center; padding: 24px;">
+            <div style="font-size: 14px; font-weight: 600; color: var(--accent-blue); word-break: break-all;" id="target-url">-</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Target</div>
+        </div>
+    </div>
+    
+    <div class="card animate-in" style="animation-delay: 0.2s;">
+        <div class="card-body" style="text-align: center; padding: 24px;">
+            <div class="status-badge" id="status-badge" data-status="">-</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Status</div>
+        </div>
+    </div>
+</div>
+
+<div class="card animate-in" style="animation-delay: 0.25s;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <span>📁</span>
+            Paths Found
+        </h3>
+    </div>
+    <div class="card-body" style="padding: 0; max-height: 500px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="position: sticky; top: 0; background: var(--bg-card);">
+                <tr>
+                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Path</th>
+                </tr>
+            </thead>
+            <tbody id="results-list">
+                <tr>
+                    <td colspan="1" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
+                        Loading...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadDetail() {
+    const fuzzId = {{ fuzz_id }};
+    
+    try {
+        const response = await fetch(`/api/enum/fuzz/${fuzzId}`);
+        const data = await response.json();
+        
+        document.getElementById('total-count').textContent = data.total_found || 0;
+        document.getElementById('target-url').textContent = data.target || '-';
+        
+        const statusBadge = document.getElementById('status-badge');
+        statusBadge.textContent = data.status;
+        statusBadge.dataset.status = data.status;
+        
+    } catch (error) {
+        console.error('Error loading detail:', error);
+    }
+    
+    try {
+        const response = await fetch(`/api/enum/fuzz/${fuzzId}/results`);
+        const results = await response.json();
+        
+        const tbody = document.getElementById('results-list');
+        
+        if (results.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="1" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
+                        No paths found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = results.map(r => `
+            <tr style="border-top: 1px solid var(--border-light);">
+                <td style="padding: 16px;">
+                    <span class="text-mono" style="color: var(--accent-blue);">${r.path}</span>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading results:', error);
+    }
+}
+
+loadDetail();
+</script>
+{% endblock %}
