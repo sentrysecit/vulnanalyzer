@@ -48,6 +48,12 @@ class ScanResponse(BaseModel):
     medium_count: int
     low_count: int
     info_count: int
+    os_name: Optional[str] = None
+    os_family: Optional[str] = None
+    os_accuracy: Optional[str] = None
+    is_domain_controller: bool = False
+    domain_name: Optional[str] = None
+    ad_vulnerabilities: int = 0
 
     class Config:
         from_attributes = True
@@ -200,6 +206,7 @@ class VulnerabilityResponse(BaseModel):
     exploit_available: bool = False
     edb_id: Optional[str] = None
     description: Optional[str] = None
+    host_os: Optional[str] = None
     created_at: Optional[datetime] = None
 
     class Config:
