@@ -24,9 +24,7 @@ def get_scan_vulnerabilities(scan_id: int, db: Session = Depends(get_db)):
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
 
-    vulns = db.query(Vulnerability).filter(
-        Vulnerability.scan_id == scan_id
-    ).all()
+    vulns = db.query(Vulnerability).filter(Vulnerability.scan_id == scan_id).all()
 
     return [VulnerabilityResponse.model_validate(v) for v in vulns]
 
@@ -37,9 +35,7 @@ def get_enum_vulnerabilities(enum_id: int, db: Session = Depends(get_db)):
     if not enum:
         raise HTTPException(status_code=404, detail="Enumeration not found")
 
-    vulns = db.query(Vulnerability).filter(
-        Vulnerability.enum_id == enum_id
-    ).all()
+    vulns = db.query(Vulnerability).filter(Vulnerability.enum_id == enum_id).all()
 
     return [VulnerabilityResponse.model_validate(v) for v in vulns]
 
@@ -50,11 +46,13 @@ def get_host_vulnerabilities(
     db: Session = Depends(get_db),
     limit: int = Query(100, ge=1, le=500),
 ):
-    vulns = db.query(Vulnerability).filter(
-        Vulnerability.host == host
-    ).order_by(
-        desc(Vulnerability.cvss_score)
-    ).limit(limit).all()
+    vulns = (
+        db.query(Vulnerability)
+        .filter(Vulnerability.host == host)
+        .order_by(desc(Vulnerability.cvss_score))
+        .limit(limit)
+        .all()
+    )
 
     return [VulnerabilityResponse.model_validate(v) for v in vulns]
 
@@ -62,27 +60,37 @@ def get_host_vulnerabilities(
 @router.get("/stats", response_model=VulnerabilityStatsResponse)
 def get_vulnerability_stats(db: Session = Depends(get_db)):
     total = db.query(Vulnerability).count()
-    critical = db.query(Vulnerability).filter(
-        Vulnerability.cvss_score >= 9.0
-    ).count()
-    high = db.query(Vulnerability).filter(
-        func.cast(Vulnerability.cvss_score, type_=float) >= 7.0,
-        Vulnerability.cvss_score < 9.0,
-    ).count()
-    medium = db.query(Vulnerability).filter(
-        func.cast(Vulnerability.cvss_score, type_=float) >= 4.0,
-        Vulnerability.cvss_score < 7.0,
-    ).count()
-    low = db.query(Vulnerability).filter(
-        func.cast(Vulnerability.cvss_score, type_=float) < 4.0,
-        Vulnerability.cvss_score > 0,
-    ).count()
-    exploited = db.query(Vulnerability).filter(
-        Vulnerability.is_exploited == True
-    ).count()
-    with_exploit = db.query(Vulnerability).filter(
-        Vulnerability.exploit_available == True
-    ).count()
+    critical = db.query(Vulnerability).filter(Vulnerability.cvss_score >= 9.0).count()
+    high = (
+        db.query(Vulnerability)
+        .filter(
+            func.cast(Vulnerability.cvss_score, type_=float) >= 7.0,
+            Vulnerability.cvss_score < 9.0,
+        )
+        .count()
+    )
+    medium = (
+        db.query(Vulnerability)
+        .filter(
+            func.cast(Vulnerability.cvss_score, type_=float) >= 4.0,
+            Vulnerability.cvss_score < 7.0,
+        )
+        .count()
+    )
+    low = (
+        db.query(Vulnerability)
+        .filter(
+            func.cast(Vulnerability.cvss_score, type_=float) < 4.0,
+            Vulnerability.cvss_score > 0,
+        )
+        .count()
+    )
+    exploited = (
+        db.query(Vulnerability).filter(Vulnerability.is_exploited == True).count()
+    )
+    with_exploit = (
+        db.query(Vulnerability).filter(Vulnerability.exploit_available == True).count()
+    )
 
     return VulnerabilityStatsResponse(
         total=total,
@@ -132,12 +140,15 @@ def search_cve(request: CVESearchRequest, db: Session = Depends(get_db)):
         scanner = CVEScanner()
         results = scanner.search_cves_by_keyword(request.keyword, limit=request.limit)
 
-        return [CVEDetailResponse(
-            id=r.get("id"),
-            cvss_score=r.get("cvss_score"),
-            severity=r.get("severity"),
-            is_exploited=r.get("is_exploited", False),
-        ) for r in results]
+        return [
+            CVEDetailResponse(
+                id=r.get("id"),
+                cvss_score=r.get("cvss_score"),
+                severity=r.get("severity"),
+                is_exploited=r.get("is_exploited", False),
+            )
+            for r in results
+        ]
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -153,13 +164,16 @@ def get_exploits(cve_id: str, db: Session = Depends(get_db)):
         finder = ExploitFinder()
         results = finder.search_by_cve(cve_id)
 
-        return [ExploitResponse(
-            edb_id=str(r.get("edb_id", "")),
-            title=r.get("title", ""),
-            cve_id=cve_id,
-            link=r.get("link", ""),
-            source=r.get("source", "unknown"),
-        ) for r in results]
+        return [
+            ExploitResponse(
+                edb_id=str(r.get("edb_id", "")),
+                title=r.get("title", ""),
+                cve_id=cve_id,
+                link=r.get("link", ""),
+                source=r.get("source", "unknown"),
+            )
+            for r in results
+        ]
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -173,14 +187,17 @@ def search_exploits(request: CVESearchRequest, db: Session = Depends(get_db)):
         finder = ExploitFinder()
         results = finder.search_by_service(request.keyword)
 
-        return [ExploitResponse(
-            edb_id=str(r.get("edb_id", "")),
-            title=r.get("title", ""),
-            service=r.get("service", ""),
-            version=r.get("version"),
-            link=r.get("link", ""),
-            source=r.get("source", "unknown"),
-        ) for r in results]
+        return [
+            ExploitResponse(
+                edb_id=str(r.get("edb_id", "")),
+                title=r.get("title", ""),
+                service=r.get("service", ""),
+                version=r.get("version"),
+                link=r.get("link", ""),
+                source=r.get("source", "unknown"),
+            )
+            for r in results
+        ]
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -215,37 +232,49 @@ def check_scan_vulnerabilities(scan_id: int, db: Session = Depends(get_db)):
 
             results = json.loads(scan.results_json or "{}")
             services_info = []
+            host_os_map = {}
 
             for host, host_data in results.items():
+                host_os_map[host] = host_data.get("os_family")
                 for port, port_data in host_data.get("ports", {}).items():
                     if port_data.get("state") == "open":
-                        services_info.append({
-                            "host": host,
-                            "port": port,
-                            "service": port_data.get("service", ""),
-                            "version": port_data.get("version", ""),
-                        })
+                        services_info.append(
+                            {
+                                "host": host,
+                                "port": port,
+                                "service": port_data.get("service", ""),
+                                "version": port_data.get("version", ""),
+                            }
+                        )
 
             vulns = scanner.detect_vulnerabilities(services_info)
 
             for vuln in vulns:
-                existing = db.query(Vulnerability).filter(
-                    Vulnerability.cve_id == vuln.get("cve_id"),
-                    Vulnerability.host == vuln.get("host"),
-                ).first()
+                existing = (
+                    db.query(Vulnerability)
+                    .filter(
+                        Vulnerability.cve_id == vuln.get("cve_id"),
+                        Vulnerability.host == vuln.get("host"),
+                    )
+                    .first()
+                )
 
                 if not existing:
+                    host = vuln.get("host")
                     v = Vulnerability(
                         scan_type="network",
                         scan_id=scan_id,
-                        host=vuln.get("host"),
+                        host=host,
                         port=vuln.get("port"),
                         service=vuln.get("service"),
                         version=vuln.get("version"),
                         cve_id=vuln.get("cve_id"),
                         severity=vuln.get("severity"),
-                        cvss_score=str(vuln.get("cvss_score")) if vuln.get("cvss_score") else None,
+                        cvss_score=str(vuln.get("cvss_score"))
+                        if vuln.get("cvss_score")
+                        else None,
                         is_exploited=vuln.get("is_exploited", False),
+                        host_os=host_os_map.get(host),
                     )
                     db.add(v)
 
