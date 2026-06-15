@@ -45,10 +45,7 @@
     <!-- Recent Scans -->
     <div class="card animate-in animate-in-delay-2" style="animation-delay: 0.25s;">
         <div class="card-header">
-            <h3 class="card-title">
-                <span>📋</span>
-                Recent Scans
-            </h3>
+            <h3 class="card-title">Recent Scans</h3>
             <a href="/web/scans" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
                 View All
             </a>
@@ -59,6 +56,7 @@
                     <tr>
                         <th>Target</th>
                         <th>Type</th>
+                        <th>OS</th>
                         <th>Status</th>
                         <th>Vulns</th>
                         <th>Date</th>
@@ -66,7 +64,7 @@
                 </thead>
                 <tbody id="recent-scans">
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <div class="skeleton" style="height: 20px; width: 60%; margin: 0 auto 10px;"></div>
                                 <div class="skeleton" style="height: 20px; width: 40%; margin: 0 auto;"></div>
@@ -273,6 +271,17 @@
                     </td>
                     <td>
                         <span class="badge badge-gray">${scan.scan_type}</span>
+                    </td>
+                    <td>
+                        ${scan.os_family && scan.os_family !== 'Unknown' ? `
+                            ${scan.os_family === 'Windows' ? `
+                                <span class="badge" style="background: #0078D4; color: white; font-size: 10px;">Windows</span>
+                            ` : scan.os_family === 'Linux' ? `
+                                <span class="badge" style="background: #E95420; color: white; font-size: 10px;">Linux</span>
+                            ` : scan.os_family === 'macOS' ? `
+                                <span class="badge" style="background: #333; color: white; font-size: 10px;">macOS</span>
+                            ` : `<span class="badge badge-gray">${scan.os_family}</span>`}
+                        ` : `<span style="color: var(--text-tertiary); font-size: 12px;">—</span>`}
                     </td>
                     <td>
                         <span class="badge badge-${scan.status === 'completed' ? 'green' : scan.status === 'running' ? 'blue' : scan.status === 'failed' ? 'red' : 'gray'}">
