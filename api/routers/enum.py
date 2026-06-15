@@ -70,7 +70,11 @@ def start_subdomain_enum(request: SubdomainRequest, db: Session = Depends(get_db
     def run_in_background():
         db = SessionLocal()
         try:
-            enum = db.query(SubdomainEnum).filter(SubdomainEnum.id == subdomain_enum.id).first()
+            enum = (
+                db.query(SubdomainEnum)
+                .filter(SubdomainEnum.id == subdomain_enum.id)
+                .first()
+            )
             if not enum:
                 return
 
@@ -154,7 +158,9 @@ def get_subdomain_enum(enum_id: int, db: Session = Depends(get_db)):
     return SubdomainDetail.model_validate(enum)
 
 
-@router.get("/subdomain/{enum_id}/results", response_model=List[SubdomainResultResponse])
+@router.get(
+    "/subdomain/{enum_id}/results", response_model=List[SubdomainResultResponse]
+)
 def get_subdomain_results(enum_id: int, db: Session = Depends(get_db)):
     enum = db.query(SubdomainEnum).filter(SubdomainEnum.id == enum_id).first()
     if not enum:
@@ -190,7 +196,9 @@ def start_fuzz(request: FuzzRequest, db: Session = Depends(get_db)):
             db.commit()
 
             try:
-                extensions = request.extensions.split(",") if request.extensions else None
+                extensions = (
+                    request.extensions.split(",") if request.extensions else None
+                )
                 fuzzer = PathFuzzer(
                     target=request.target,
                     wordlist=request.wordlist,

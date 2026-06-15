@@ -84,14 +84,14 @@ def main():
     caldera_parser.add_argument("--adversary", help="Name of the opponent to use")
 
     # Subdomain enumeration command
-    subdomain_parser = subparsers.add_parser(
-        "subdomain", help="Enumerate subdomains"
-    )
+    subdomain_parser = subparsers.add_parser("subdomain", help="Enumerate subdomains")
     subdomain_parser.add_argument(
         "target", help="Domain to enumerate (e.g., example.com)"
     )
     subdomain_parser.add_argument(
-        "--wordlist", "-w", help="Wordlist for subdomain fuzzing (default: seclists medium)"
+        "--wordlist",
+        "-w",
+        help="Wordlist for subdomain fuzzing (default: seclists medium)",
     )
     subdomain_parser.add_argument(
         "--output", "-o", help="Output file for results (default: subdomains.txt)"
@@ -107,9 +107,7 @@ def main():
     )
 
     # Path fuzzing command
-    fuzz_parser = subparsers.add_parser(
-        "fuzz", help="Directory/path fuzzing"
-    )
+    fuzz_parser = subparsers.add_parser("fuzz", help="Directory/path fuzzing")
     fuzz_parser.add_argument(
         "target", help="URL or host to fuzz (e.g., http://example.com)"
     )
@@ -125,9 +123,7 @@ def main():
     fuzz_parser.add_argument(
         "--extensions", "-e", help="File extensions to try (e.g., .php,.html)"
     )
-    fuzz_parser.add_argument(
-        "--silent", action="store_true", help="Minimal output"
-    )
+    fuzz_parser.add_argument("--silent", action="store_true", help="Minimal output")
 
     # Web command
     web_parser = subparsers.add_parser("web", help="Start the web interface")
