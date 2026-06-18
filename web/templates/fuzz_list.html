@@ -77,10 +77,13 @@ async function loadFuzzList() {
                 <td style="padding: 16px; font-size: 13px; color: var(--text-secondary);">
                     ${f.created_at ? new Date(f.created_at).toLocaleDateString() : '-'}
                 </td>
-                <td style="padding: 16px; text-align: center;">
+                <td style="padding: 16px; text-align: center; display: flex; gap: 8px; justify-content: center;">
                     <a href="/web/enum/fuzz/${f.id}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
                         View
                     </a>
+                    <button onclick="deleteFuzz(${f.id})" class="btn" style="padding: 8px 16px; font-size: 13px; background: var(--accent-red-light); color: var(--accent-red); border: none; border-radius: 6px; cursor: pointer;">
+                        Delete
+                    </button>
                 </td>
             </tr>
         `).join('');
@@ -109,6 +112,20 @@ async function loadFuzzList() {
         
     } catch (error) {
         console.error('Error loading fuzz list:', error);
+    }
+}
+
+async function deleteFuzz(id) {
+    if (!confirm('Are you sure you want to delete this fuzzing job and all its results?')) return;
+    try {
+        const response = await fetch(`/api/enum/fuzz/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            loadFuzzList();
+        } else {
+            alert('Failed to delete fuzzing job.');
+        }
+    } catch (error) {
+        console.error('Error deleting fuzzing job:', error);
     }
 }
 

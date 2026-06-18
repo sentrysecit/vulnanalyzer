@@ -50,7 +50,7 @@ The web interface provides a visual way to manage scans, view results, and gener
 python main.py web
 ```
 
-2. Open your browser at:
+1. Open your browser at:
    - **Dashboard:** <http://localhost:8000/web/dashboard>
    - **Scan List:** <http://localhost:8000/web/scans>
    - **New Scan:** <http://localhost:8000/web/scan/new>
@@ -110,7 +110,7 @@ The web interface allows visual subdomain enumeration.
 
 ### Form Options
 
-- **Target Domain**: Target domain (e.g., example.com)
+- **Target Domain**: Target domain (e.g., example.com). Must be a valid hostname or IP address — shell metacharacters are rejected by server-side validation.
 - **Wordlist**: Predefined wordlist selection or custom path
 - **Threads**: Number of threads (default: 40)
 - **Run Nuclei**: Option to run nuclei on discovered hosts
@@ -137,7 +137,7 @@ The web interface allows directory and path fuzzing.
 
 ### Form Options
 
-- **Target URL**: Full URL with protocol (http:// or https://)
+- **Target URL**: Full URL with protocol (http:// or https://). The host must be a valid hostname or IP address — server-side validation rejects malformed or potentially dangerous input.
 - **Wordlist**: Predefined wordlist selection or custom path
 - **Extensions**: File extensions to test (e.g., .php,.html,.txt)
 - **Threads**: Number of threads (default: 40)
@@ -190,7 +190,7 @@ Access the Swagger documentation at: <http://localhost:8000/docs>
 | GET | `/api/vulns/exploit/{cve_id}` | Get exploits for a CVE | List[ExploitResponse] |
 | POST | `/api/vulns/exploit/search` | Search exploits by service | List[ExploitResponse] |
 | DELETE | `/api/vulns/{vuln_id}` | Delete a vulnerability | dict |
-| POST | `/api/vulns/check-scan/{scan_id}` | Trigger CVE/exploit check for a scan | dict |
+| POST | `/api/vulns/check-scan/{scan_id}` | Trigger CVE/exploit check for a scan (async) | AsyncTaskResponse |
 
 > For detailed vulnerability API usage, see the [Vulnerability Database Guide](./03_vulnerability_database.md).
 
@@ -201,7 +201,7 @@ Access the Swagger documentation at: <http://localhost:8000/docs>
 | GET | `/api/reports/{scan_id}` | Get report data (JSON) | ReportResponse |
 | GET | `/api/reports/{scan_id}/html` | Get report as HTML | HTMLResponse |
 | GET | `/api/reports/{scan_id}/preview` | Report preview (Jinja2 rendered) | HTMLResponse |
-| GET | `/api/reports/{scan_id}/download/{format}` | Download report (html/json) | FileResponse |
+| GET | `/api/reports/{scan_id}/download/{format}` | Download report (html/json/markdown) | FileResponse |
 
 ### Enumeration Endpoints (`/api/enum`)
 
@@ -261,6 +261,12 @@ curl -O http://localhost:8000/api/reports/1/download/json
 
 ```bash
 curl -O http://localhost:8000/api/reports/1/download/html
+```
+
+**Download a report (Markdown):**
+
+```bash
+curl -O http://localhost:8000/api/reports/1/download/markdown
 ```
 
 **Preview a report:**
@@ -380,6 +386,12 @@ data/vulnanalyzer.db
 | medium_count | INTEGER | Medium severity count |
 | low_count | INTEGER | Low severity count |
 | info_count | INTEGER | Informational count |
+| os_name | VARCHAR(100) | Detected OS name (e.g., "Windows Server 2019") |
+| os_family | VARCHAR(50) | OS family (e.g., "Windows", "Linux") |
+| os_accuracy | VARCHAR(10) | OS detection accuracy percentage |
+| is_domain_controller | BOOLEAN | Whether target appears to be a Domain Controller |
+| domain_name | VARCHAR(255) | Active Directory domain name (if detected) |
+| ad_vulnerabilities | INTEGER | Count of AD-specific vulnerabilities found |
 
 #### `subdomain_enum`
 
@@ -449,6 +461,7 @@ data/vulnanalyzer.db
 | exploit_available | BOOLEAN | Whether an exploit is available |
 | edb_id | VARCHAR(20) | Exploit-DB ID |
 | description | TEXT | Vulnerability description |
+| host_os | VARCHAR(50) | OS family of the affected host at scan time |
 | created_at | DATETIME | Creation timestamp |
 
 > For more details on the vulnerability database, see the [Vulnerability Database Guide](./03_vulnerability_database.md).
