@@ -1,6 +1,6 @@
 import subprocess
 import os
-import re
+import time
 from urllib.parse import urlparse
 
 
@@ -21,8 +21,7 @@ def clean_domain(domain):
 
 def check_tool(tool):
     result = subprocess.run(
-        f"which {tool}",
-        shell=True,
+        ["which", tool],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -54,12 +53,11 @@ def run_subfinder(domain, output="subdomains.txt", silent=True):
         print("[!] subfinder no instalado")
         return False
 
-    cmd = f"subfinder -d {domain}"
+    cmd = ["subfinder", "-d", domain, "-o", output]
     if silent:
-        cmd += " -silent"
-    cmd += f" -o {output}"
+        cmd.append("-silent")
 
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    subprocess.run(cmd, capture_output=True, text=True)
 
     if file_has_content(output):
         print(f"[+] Subfinder encontró resultados: {output}")
@@ -72,10 +70,18 @@ def run_subfinder(domain, output="subdomains.txt", silent=True):
 def detect_wildcard(domain):
     print("[*] Detectando wildcard...")
 
-    random_sub = f"rnd{subprocess.getoutput('date +%s')}"
-    cmd = f"curl -s -o /dev/null -w '%{{size_download}}' -H 'Host: {random_sub}.{domain}' http://{domain}"
-
-    size = subprocess.getoutput(cmd)
+    random_sub = f"rnd{int(time.time())}"
+    result = subprocess.run(
+        [
+            "curl", "-s", "-o", "/dev/null",
+            "-w", "%{size_download}",
+            "-H", f"Host: {random_sub}.{domain}",
+            f"http://{domain}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    size = result.stdout.strip()
 
     print(f"[+] Wildcard size detectado: {size}")
     return size
@@ -124,7 +130,7 @@ def run_ffuf_subdomain(
 
     cmd.extend(["-of", "csv", "-o", "ffuf_subs.csv"])
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    subprocess.run(cmd, capture_output=True, text=True)
 
     found = set()
 
@@ -156,17 +162,18 @@ def run_httpx(input_file, output="alive.txt", silent=True):
     httpx_path = os.path.expanduser("~/go/bin/httpx")
 
     if not os.path.exists(httpx_path):
-        httpx_path = subprocess.getoutput("which httpx").strip()
+        httpx_path = subprocess.run(
+            ["which", "httpx"], capture_output=True, text=True
+        ).stdout.strip()
         if not httpx_path:
             print("[!] httpx no instalado")
             return False
 
-    cmd = f"{httpx_path} -l {input_file}"
+    cmd = [httpx_path, "-l", input_file, "-o", output]
     if silent:
-        cmd += " -silent"
-    cmd += f" -o {output}"
+        cmd.append("-silent")
 
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    subprocess.run(cmd, capture_output=True, text=True)
 
     return file_has_content(output)
 
@@ -178,8 +185,7 @@ def run_nuclei(input_file, severity="medium,high,critical"):
         print("[!] nuclei no instalado")
         return
 
-    cmd = f"nuclei -l {input_file} -severity {severity}"
-    subprocess.run(cmd, shell=True)
+    subprocess.run(["nuclei", "-l", input_file, "-severity", severity])
 
 
 class SubdomainEnumerator:
@@ -284,13 +290,6 @@ class SubdomainEnumerator:
             from core.exploit_finder import ExploitFinder
 
             finder = ExploitFinder()
-            cve_ids = list(
-                set(
-                    v.get("cve_id")
-                    for v in self.results["vulnerabilities"]
-                    if v.get("cve_id")
-                )
-            )
 
             for vuln in self.results["vulnerabilities"]:
                 cve_id = vuln.get("cve_id")

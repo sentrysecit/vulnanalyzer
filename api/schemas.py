@@ -1,7 +1,24 @@
-from pydantic import BaseModel
+import re
+import ipaddress
+from urllib.parse import urlparse
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from enum import Enum
+
+
+_HOSTNAME_RE = re.compile(
+    r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
+    r'(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+)
+
+
+def _valid_host(host: str) -> bool:
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return bool(_HOSTNAME_RE.match(host))
 
 
 class ScanType(str, Enum):
@@ -92,6 +109,17 @@ class SubdomainRequest(BaseModel):
     threads: int = 40
     use_nuclei: bool = False
 
+    @field_validator("target")
+    @classmethod
+    def validate_domain(cls, v: str) -> str:
+        v = v.strip()
+        if v.startswith(("http://", "https://")):
+            v = urlparse(v).netloc
+        host = v.split(":")[0]
+        if not _valid_host(host):
+            raise ValueError("Invalid domain: must be a valid hostname or IP address")
+        return v
+
 
 class SubdomainResponse(BaseModel):
     id: int
@@ -127,6 +155,18 @@ class FuzzRequest(BaseModel):
     wordlist: Optional[str] = None
     threads: int = 40
     extensions: Optional[str] = None
+
+    @field_validator("target")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        v = v.strip()
+        if not v.startswith(("http://", "https://")):
+            v = "http://" + v
+        parsed = urlparse(v)
+        host = parsed.hostname or ""
+        if not _valid_host(host):
+            raise ValueError("Invalid URL: host must be a valid hostname or IP address")
+        return v
 
 
 class FuzzResponse(BaseModel):
@@ -221,3 +261,8 @@ class VulnerabilityStatsResponse(BaseModel):
     low: int
     exploited: int
     with_exploit: int
+
+
+class AsyncTaskResponse(BaseModel):
+    message: str
+    scan_id: int
