@@ -66,6 +66,10 @@
 
 {% block extra_js %}
 <script>
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 async function loadDetail() {
     const fuzzId = {{ fuzz_id }};
     
@@ -104,7 +108,7 @@ async function loadDetail() {
         tbody.innerHTML = results.map(r => `
             <tr style="border-top: 1px solid var(--border-light);">
                 <td style="padding: 16px;">
-                    <span class="text-mono" style="color: var(--accent-blue);">${r.path}</span>
+                    <span class="text-mono" style="color: var(--accent-blue);">${escapeHtml(r.path)}</span>
                 </td>
             </tr>
         `).join('');

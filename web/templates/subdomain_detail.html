@@ -82,6 +82,10 @@
 
 {% block extra_js %}
 <script>
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
     async function loadDetail() {
         const enumId = {{ enum_id }
     };
@@ -122,7 +126,7 @@
         tbody.innerHTML = results.map(r => `
             <tr style="border-top: 1px solid var(--border-light);">
                 <td style="padding: 16px;">
-                    <span class="text-mono" style="color: var(--accent-blue);">${r.subdomain}</span>
+                    <span class="text-mono" style="color: var(--accent-blue);">${escapeHtml(r.subdomain)}</span>
                 </td>
                 <td style="padding: 16px; text-align: center;">
                     <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; ${r.is_alive

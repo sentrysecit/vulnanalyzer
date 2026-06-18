@@ -42,6 +42,10 @@
 
 {% block extra_js %}
 <script>
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 async function loadFuzzList() {
     try {
         const response = await fetch('/api/enum/fuzz');
@@ -64,11 +68,11 @@ async function loadFuzzList() {
             <tr style="border-top: 1px solid var(--border-light);">
                 <td style="padding: 16px; font-weight: 600;">#${f.id}</td>
                 <td style="padding: 16px;">
-                    <span class="text-mono" style="color: var(--accent-blue);">${f.target}</span>
+                    <span class="text-mono" style="color: var(--accent-blue);">${escapeHtml(f.target)}</span>
                 </td>
                 <td style="padding: 16px; text-align: center;">${f.total_found}</td>
                 <td style="padding: 16px; text-align: center;">
-                    <span class="status-badge" data-status="${f.status}">${f.status}</span>
+                    <span class="status-badge" data-status="${escapeHtml(f.status)}">${escapeHtml(f.status)}</span>
                 </td>
                 <td style="padding: 16px; font-size: 13px; color: var(--text-secondary);">
                     ${f.created_at ? new Date(f.created_at).toLocaleDateString() : '-'}
