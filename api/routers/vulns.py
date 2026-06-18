@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
-from typing import Optional, List
+from typing import List
 import threading
 
 from api.database import get_db, SessionLocal
 from api.models import Vulnerability, Scan, SubdomainEnum
 from api.schemas import (
+    AsyncTaskResponse,
     CVESearchRequest,
     CVEDetailResponse,
     ExploitResponse,
@@ -86,10 +87,10 @@ def get_vulnerability_stats(db: Session = Depends(get_db)):
         .count()
     )
     exploited = (
-        db.query(Vulnerability).filter(Vulnerability.is_exploited == True).count()
+        db.query(Vulnerability).filter(Vulnerability.is_exploited).count()
     )
     with_exploit = (
-        db.query(Vulnerability).filter(Vulnerability.exploit_available == True).count()
+        db.query(Vulnerability).filter(Vulnerability.exploit_available).count()
     )
 
     return VulnerabilityStatsResponse(
@@ -214,7 +215,7 @@ def delete_vulnerability(vuln_id: int, db: Session = Depends(get_db)):
     return {"message": "Vulnerability deleted successfully"}
 
 
-@router.post("/check-scan/{scan_id}", response_model=List[VulnerabilityResponse])
+@router.post("/check-scan/{scan_id}", response_model=AsyncTaskResponse)
 def check_scan_vulnerabilities(scan_id: int, db: Session = Depends(get_db)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
@@ -225,10 +226,8 @@ def check_scan_vulnerabilities(scan_id: int, db: Session = Depends(get_db)):
         try:
             import json
             from core.cve_scanner import CVEScanner
-            from core.exploit_finder import ExploitFinder
 
             scanner = CVEScanner()
-            finder = ExploitFinder()
 
             results = json.loads(scan.results_json or "{}")
             services_info = []
