@@ -212,10 +212,12 @@ Access the Swagger documentation at: <http://localhost:8000/docs>
 | GET | `/api/enum/subdomain` | List all enumerations | List[SubdomainDetail] |
 | GET | `/api/enum/subdomain/{id}` | Get enumeration details | SubdomainDetail |
 | GET | `/api/enum/subdomain/{id}/results` | Get subdomains found | List[SubdomainResultResponse] |
+| DELETE | `/api/enum/subdomain/{id}` | Delete enumeration and all results | 204 No Content |
 | POST | `/api/enum/fuzz` | Start path fuzzing | FuzzResponse |
 | GET | `/api/enum/fuzz` | List all fuzzing jobs | List[FuzzDetail] |
 | GET | `/api/enum/fuzz/{id}` | Get fuzzing details | FuzzDetail |
 | GET | `/api/enum/fuzz/{id}/results` | Get paths found | List[PathResultResponse] |
+| DELETE | `/api/enum/fuzz/{id}` | Delete fuzzing job and all results | 204 No Content |
 
 ### Health Endpoint
 
