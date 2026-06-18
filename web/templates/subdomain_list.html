@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Subdomain Enumerations - VulnAnalyzer{% endblock %}
 
@@ -10,7 +11,7 @@
 
 <div style="margin-bottom: 24px;">
     <a href="/web/subdomain/new" class="btn btn-primary">
-        <span>➕</span> New Enumeration
+        <span>{{ icon('plus') }}</span> New Enumeration
     </a>
 </div>
 

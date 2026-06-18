@@ -1,3 +1,4 @@
+{% from "_icons.html" import icon %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -8,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
         :root {
@@ -34,8 +35,18 @@
             --radius-lg: 16px;
             --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-            --font-display: 'DM Serif Display', serif;
+            --font-display: 'JetBrains Mono', ui-monospace, monospace;
             --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+            display: inline-block;
+            vertical-align: -0.125em;
+            flex-shrink: 0;
         }
 
         * {
@@ -99,7 +110,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 22px;
+            color: #1d1d1f;
         }
 
         .report-logo-text {
@@ -109,8 +121,9 @@
 
         .report-title {
             font-family: var(--font-display);
-            font-size: 36px;
-            font-weight: 400;
+            font-size: 30px;
+            font-weight: 600;
+            letter-spacing: -1px;
             margin-bottom: 8px;
         }
 
@@ -235,9 +248,12 @@
         }
 
         .host-name {
-            font-family: 'DM Sans', monospace;
+            font-family: var(--font-mono);
             font-size: 16px;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .host-status {
@@ -428,7 +444,7 @@
         <!-- Header -->
         <div class="report-header">
             <div class="report-logo">
-                <div class="report-logo-icon">🛡️</div>
+                <div class="report-logo-icon">{{ icon('shield') }}</div>
                 <span class="report-logo-text">VulnAnalyzer</span>
             </div>
             <h1 class="report-title">{{ title }}</h1>
@@ -485,8 +501,8 @@
             {% if scan.results %}
             {% for host, host_data in scan.results.items() %}
             <div class="report-section">
-                <h2 class="report-section-title">
-                    🖥️ {{ host }}
+                <h2 class="report-section-title" style="display: flex; align-items: center; gap: 8px;">
+                    {{ icon('computer') }} {{ host }}
                     <span class="host-status {{ host_data.status }}">{{ host_data.status }}</span>
                 </h2>
 
@@ -531,18 +547,18 @@
                         {% endif %}
                         {% if vuln.is_exploited %}
                         <p style="font-size: 12px; color: var(--accent-red); font-weight: 600; margin-bottom: 8px;">
-                            ⚠️ This vulnerability is being actively exploited in the wild (CISA KEV)
+                            {{ icon('warning') }} This vulnerability is being actively exploited in the wild (CISA KEV)
                         </p>
                         {% endif %}
                         {% if vuln.recommendation %}
-                        <div class="vuln-recommendation">💡 {{ vuln.recommendation }}</div>
+                        <div class="vuln-recommendation">{{ icon('bulb') }} {{ vuln.recommendation }}</div>
                         {% endif %}
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
                 <div class="no-vulns">
-                    <div class="no-vulns-icon">✓</div>
+                    <div class="no-vulns-icon">{{ icon('check-circle') }}</div>
                     <div>No vulnerabilities detected on this host</div>
                 </div>
                 {% endif %}
@@ -550,7 +566,7 @@
             {% endfor %}
             {% else %}
             <div class="no-vulns">
-                <div class="no-vulns-icon">📋</div>
+                <div class="no-vulns-icon">{{ icon('clipboard') }}</div>
                 <div>No scan results available</div>
             </div>
             {% endif %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Report #{{ scan_id }} - VulnAnalyzer{% endblock %}
 
@@ -12,10 +13,13 @@
     </div>
     <div style="display: flex; gap: 12px;">
         <button onclick="window.print()" class="btn btn-secondary">
-            <span>🖨️</span> Print
+            <span>{{ icon('printer') }}</span> Print
         </button>
         <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-secondary">
-            <span>⬇</span> JSON
+            <span>{{ icon('download') }}</span> JSON
+        </a>
+        <a href="/api/reports/{{ scan_id }}/download/markdown" class="btn btn-secondary">
+            <span>{{ icon('download') }}</span> Markdown
         </a>
     </div>
 </div>

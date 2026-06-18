@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Fuzzing Details - VulnAnalyzer{% endblock %}
 
@@ -40,7 +41,7 @@
 <div class="card animate-in" style="animation-delay: 0.25s;">
     <div class="card-header">
         <h3 class="card-title">
-            <span>📁</span>
+            <span>{{ icon('folder') }}</span>
             Paths Found
         </h3>
     </div>

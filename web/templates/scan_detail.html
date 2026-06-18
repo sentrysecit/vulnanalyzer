@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Scan #{{ scan_id }} - VulnAnalyzer{% endblock %}
 
@@ -12,13 +13,16 @@
     </div>
     <div style="display: flex; gap: 12px;">
         <a href="/api/reports/{{ scan_id }}/html" target="_blank" class="btn btn-primary">
-            <span>📄</span> View Report
+            <span>{{ icon('document') }}</span> View Report
         </a>
         <a href="/api/reports/{{ scan_id }}/download/html" class="btn btn-secondary">
-            <span>⬇</span> HTML
+            <span>{{ icon('download') }}</span> HTML
         </a>
         <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-secondary">
-            <span>⬇</span> JSON
+            <span>{{ icon('download') }}</span> JSON
+        </a>
+        <a href="/api/reports/{{ scan_id }}/download/markdown" class="btn btn-secondary">
+            <span>{{ icon('download') }}</span> Markdown
         </a>
     </div>
 </div>
@@ -48,7 +52,7 @@
             <div class="stat-grid" style="margin-bottom: 32px;">
                 <div class="stat-card ${scan.status === 'completed' ? 'green' : scan.status === 'failed' ? 'red' : 'blue'}">
                     <div class="stat-icon ${scan.status === 'completed' ? 'green' : scan.status === 'failed' ? 'red' : 'blue'}">
-                        <span>${scan.status === 'completed' ? '✓' : scan.status === 'failed' ? '✗' : '◌'}</span>
+                        <span>${scan.status === 'completed' ? window.icon('check-circle') : scan.status === 'failed' ? window.icon('x-circle') : window.icon('info')}</span>
                     </div>
                     <div class="stat-value text-mono" style="font-size: 24px; text-transform: uppercase;">${scan.status}</div>
                     <div class="stat-label">Status</div>
@@ -56,20 +60,20 @@
                 
                 <div class="stat-card ${scan.total_vulnerabilities > 0 ? 'orange' : 'green'}">
                     <div class="stat-icon ${scan.total_vulnerabilities > 0 ? 'orange' : 'green'}">
-                        <span>${scan.total_vulnerabilities > 0 ? '⚠️' : '✓'}</span>
+                        <span>${scan.total_vulnerabilities > 0 ? window.icon('warning') : window.icon('check-circle')}</span>
                     </div>
                     <div class="stat-value text-mono">${scan.total_vulnerabilities}</div>
                     <div class="stat-label">Total Vulnerabilities</div>
                 </div>
                 
                 <div class="stat-card red">
-                    <div class="stat-icon red"><span>🚨</span></div>
+                    <div class="stat-icon red"><span>${window.icon('alert')}</span></div>
                     <div class="stat-value text-mono">${scan.critical_count}</div>
                     <div class="stat-label">Critical</div>
                 </div>
                 
                 <div class="stat-card orange">
-                    <div class="stat-icon orange"><span>⚠️</span></div>
+                    <div class="stat-icon orange"><span>${window.icon('warning')}</span></div>
                     <div class="stat-value text-mono">${scan.high_count}</div>
                     <div class="stat-label">High</div>
                 </div>
@@ -78,7 +82,7 @@
             <!-- Info Card -->
             <div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
                 <div class="card-header">
-                    <h3 class="card-title"><span>ℹ️</span> Scan Information</h3>
+                    <h3 class="card-title"><span>${window.icon('info')}</span> Scan Information</h3>
                 </div>
                 <div class="card-body">
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
@@ -98,7 +102,7 @@
                     
                     ${scan.error_message ? `
                     <div style="margin-top: 20px; padding: 16px; background: var(--accent-red-light); border-radius: var(--radius-md);">
-                        <div style="font-weight: 600; color: var(--accent-red); margin-bottom: 8px;">⚠️ Error</div>
+                        <div style="font-weight: 600; color: var(--accent-red); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">${window.icon('warning')} Error</div>
                         <div class="text-mono" style="font-size: 13px; color: var(--text-secondary);">${scan.error_message}</div>
                     </div>
                     ` : ''}
@@ -121,7 +125,7 @@
                         <div class="card animate-in" style="animation-delay: ${0.15 + idx * 0.1}s;">
                             <div class="card-header">
                                 <h3 class="card-title">
-                                    <span>🖥️</span>
+                                    <span>${window.icon('computer')}</span>
                                     <span class="text-mono">${host}</span>
                                     <span class="badge badge-${hostData.status === 'up' ? 'green' : 'red'}" style="margin-left: auto;">
                                         ${hostData.status}
@@ -260,7 +264,7 @@
                                                     </div>
                                                     ${v.recommendation ? `
                                                         <div style="font-size: 12px; color: var(--accent-green);">
-                                                            💡 ${v.recommendation}
+                                                            ${window.icon('bulb')} ${v.recommendation}
                                                         </div>
                                                     ` : ''}
                                                 </div>
@@ -269,7 +273,7 @@
                                     </div>
                                 ` : `
                                     <div style="text-align: center; padding: 30px; color: var(--accent-green);">
-                                        <span style="font-size: 32px;">✓</span>
+                                        <span style="font-size: 32px;">${window.icon('check-circle')}</span>
                                         <div style="font-weight: 500; margin-top: 8px;">No vulnerabilities detected</div>
                                     </div>
                                 `}
@@ -284,7 +288,7 @@
                 content += `
                 <div class="card">
                     <div class="card-body" style="text-align: center; padding: 60px;">
-                        <span style="font-size: 48px;">📋</span>
+                        <span style="font-size: 48px;">${window.icon('clipboard')}</span>
                         <div style="color: var(--text-secondary); margin-top: 16px;">Scan completed but no results stored</div>
                     </div>
                 </div>
@@ -298,7 +302,7 @@
             document.getElementById('scan-content').innerHTML = `
             <div class="card">
                 <div class="card-body" style="text-align: center; padding: 60px;">
-                    <span style="font-size: 48px;">⚠️</span>
+                    <span style="font-size: 48px;">${window.icon('warning')}</span>
                     <div style="font-weight: 600; color: var(--accent-red); margin-top: 16px;">Error loading scan</div>
                     <div style="color: var(--text-secondary); margin-top: 8px;">${error.message}</div>
                 </div>

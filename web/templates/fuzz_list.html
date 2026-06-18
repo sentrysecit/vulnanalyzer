@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Path Fuzzing Results - VulnAnalyzer{% endblock %}
 
@@ -10,7 +11,7 @@
 
 <div style="margin-bottom: 24px;">
     <a href="/web/fuzz/new" class="btn btn-primary">
-        <span>➕</span> New Fuzzing
+        <span>{{ icon('plus') }}</span> New Fuzzing
     </a>
 </div>
 

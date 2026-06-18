@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Subdomain Details - VulnAnalyzer{% endblock %}
 
@@ -18,28 +19,32 @@
     <div class="card animate-in" style="animation-delay: 0.1s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div style="font-size: 32px; font-weight: 700; color: var(--accent-blue);" id="total-count">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Total Found</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Total
+                Found</div>
         </div>
     </div>
-    
+
     <div class="card animate-in" style="animation-delay: 0.15s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div style="font-size: 32px; font-weight: 700; color: var(--accent-green);" id="alive-count">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Alive</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Alive
+            </div>
         </div>
     </div>
-    
+
     <div class="card animate-in" style="animation-delay: 0.2s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div style="font-size: 32px; font-weight: 700; color: var(--accent-orange);" id="dead-count">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Not Responding</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Not
+                Responding</div>
         </div>
     </div>
-    
+
     <div class="card animate-in" style="animation-delay: 0.25s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div class="status-badge" id="status-badge" data-status="">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Status</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">
+                Status</div>
         </div>
     </div>
 </div>
@@ -47,7 +52,7 @@
 <div class="card animate-in" style="animation-delay: 0.3s;">
     <div class="card-header">
         <h3 class="card-title">
-            <span>🌐</span>
+            <span>{{ icon('globe') }}</span>
             Subdomains Found
         </h3>
     </div>
@@ -55,8 +60,12 @@
         <table style="width: 100%; border-collapse: collapse;">
             <thead style="position: sticky; top: 0; background: var(--bg-card);">
                 <tr>
-                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Subdomain</th>
-                    <th style="padding: 16px; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Status</th>
+                    <th
+                        style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">
+                        Subdomain</th>
+                    <th
+                        style="padding: 16px; text-align: center; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">
+                        Status</th>
                 </tr>
             </thead>
             <tbody id="results-list">
@@ -73,31 +82,32 @@
 
 {% block extra_js %}
 <script>
-async function loadDetail() {
-    const enumId = {{ enum_id }};
-    
+    async function loadDetail() {
+        const enumId = {{ enum_id }
+    };
+
     try {
         const response = await fetch(`/api/enum/subdomain/${enumId}`);
         const data = await response.json();
-        
+
         document.getElementById('total-count').textContent = data.total_found || 0;
         document.getElementById('alive-count').textContent = data.alive_count || 0;
         document.getElementById('dead-count').textContent = (data.total_found - data.alive_count) || 0;
-        
+
         const statusBadge = document.getElementById('status-badge');
         statusBadge.textContent = data.status;
         statusBadge.dataset.status = data.status;
-        
+
     } catch (error) {
         console.error('Error loading detail:', error);
     }
-    
+
     try {
         const response = await fetch(`/api/enum/subdomain/${enumId}/results`);
         const results = await response.json();
-        
+
         const tbody = document.getElementById('results-list');
-        
+
         if (results.length === 0) {
             tbody.innerHTML = `
                 <tr>
@@ -108,29 +118,28 @@ async function loadDetail() {
             `;
             return;
         }
-        
+
         tbody.innerHTML = results.map(r => `
             <tr style="border-top: 1px solid var(--border-light);">
                 <td style="padding: 16px;">
                     <span class="text-mono" style="color: var(--accent-blue);">${r.subdomain}</span>
                 </td>
                 <td style="padding: 16px; text-align: center;">
-                    <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; ${
-                        r.is_alive 
-                        ? 'background: var(--accent-green-light); color: var(--accent-green);' 
-                        : 'background: var(--accent-red-light); color: var(--accent-red);'
-                    }">
+                    <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; ${r.is_alive
+                ? 'background: var(--accent-green-light); color: var(--accent-green);'
+                : 'background: var(--accent-red-light); color: var(--accent-red);'
+            }">
                         ${r.is_alive ? 'Alive' : 'Down'}
                     </span>
                 </td>
             </tr>
         `).join('');
-        
+
     } catch (error) {
         console.error('Error loading results:', error);
     }
 }
 
-loadDetail();
+    loadDetail();
 </script>
 {% endblock %}
