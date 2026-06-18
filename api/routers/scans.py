@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 import json
 import threading
 
 from api.database import get_db, SessionLocal
-from api.models import Scan, ScanStatus as DBScanStatus, ScanType as DBScanType
+from api.models import Scan, ScanStatus as DBScanStatus
 from api.schemas import (
     ScanCreate,
     ScanResponse,

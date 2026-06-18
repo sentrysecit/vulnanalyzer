@@ -3,9 +3,6 @@
 import argparse
 import sys
 import json
-import os
-import threading
-from datetime import datetime
 
 from config.settings import CALDERA_API_KEY, CALDERA_BASE_URL
 
@@ -297,7 +294,7 @@ def main():
 
     # Handle Web Command
     elif args.command == "web":
-        print(f"[*] Starting VulnAnalyzer Web Interface...")
+        print("[*] Starting VulnAnalyzer Web Interface...")
         print(f"[*] Server running at http://{args.host}:{args.port}")
         print(f"[*] Dashboard: http://{args.host}:{args.port}/web/dashboard")
         print(f"[*] API docs: http://{args.host}:{args.port}/docs")

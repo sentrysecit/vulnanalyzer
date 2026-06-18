@@ -1,7 +1,7 @@
 import nmap
 import requests
 from concurrent.futures import ThreadPoolExecutor
-from core.utils import parse_target, is_valid_target
+from core.utils import parse_target
 
 from modules.fingerprints.service_fingerprints import (
     detect_web_technology,
@@ -191,10 +191,6 @@ class VulnerabilityScanner:
             from core.exploit_finder import ExploitFinder
 
             finder = ExploitFinder()
-            cve_ids = list(
-                set(v.get("cve_id") for v in self.cve_results if v.get("cve_id"))
-            )
-
             for host in self.results:
                 for vuln in self.results[host]["vulnerabilities"]:
                     if vuln.get("type") == "cve":

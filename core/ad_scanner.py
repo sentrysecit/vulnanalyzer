@@ -1,5 +1,4 @@
 import subprocess
-import json
 import re
 from typing import Dict, List, Optional, Any
 
@@ -48,7 +47,6 @@ class ADScanner:
 
     def is_likely_dc(self, open_ports: Dict[int, dict]) -> bool:
         """Determine if host is likely a Domain Controller based on ports"""
-        dc_open = self.check_dc_ports(open_ports)
         dc_score = sum(1 for p in open_ports if p in DC_PORTS)
         return dc_score >= 3
 
@@ -68,7 +66,7 @@ class ADScanner:
                     "status": "vulnerable"
                 }
             return None
-        except Exception as e:
+        except Exception:
             return None
 
     def check_petitpotam(self) -> Optional[Dict]:
