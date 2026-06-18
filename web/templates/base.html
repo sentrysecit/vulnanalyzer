@@ -1,3 +1,4 @@
+{% from "_icons.html" import icon %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,7 +7,7 @@
     <title>{% block title %}VulnAnalyzer{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             /* Apple-inspired color palette */
@@ -44,8 +45,9 @@
             --radius-lg: 16px;
             --radius-xl: 20px;
             
-            --font-display: 'DM Serif Display', serif;
+            --font-display: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
             --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
             
             --transition-fast: 0.15s ease;
             --transition-normal: 0.25s ease;
@@ -172,6 +174,62 @@
             margin: 20px 12px;
         }
 
+        /* Collapsible nav groups */
+        .nav-group {
+            margin-bottom: 2px;
+        }
+
+        .nav-group-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 450;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .nav-group-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-group.open > .nav-group-toggle {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .nav-group-toggle .nav-chevron {
+            margin-left: auto;
+            transition: transform var(--transition-fast);
+            color: var(--text-tertiary);
+        }
+
+        .nav-group.open > .nav-group-toggle .nav-chevron {
+            transform: rotate(180deg);
+        }
+
+        .nav-group-items {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height var(--transition-normal) ease;
+        }
+
+        .nav-group.open > .nav-group-items {
+            max-height: 240px;
+        }
+
+        .nav-group-items .nav-item {
+            padding-left: 44px;
+        }
+
         /* Main Content */
         .main-wrapper {
             flex: 1;
@@ -195,11 +253,11 @@
         /* Page Header */
         .page-title {
             font-family: var(--font-display);
-            font-size: 36px;
-            font-weight: 400;
+            font-size: 28px;
+            font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 8px;
-            letter-spacing: -0.5px;
+            letter-spacing: -1px;
         }
 
         .page-subtitle {
@@ -298,7 +356,8 @@
         .stat-icon.red { background: var(--accent-red-light); }
 
         .stat-value {
-            font-size: 32px;
+            font-family: var(--font-mono);
+            font-size: 30px;
             font-weight: 600;
             color: var(--text-primary);
             line-height: 1;
@@ -585,8 +644,23 @@
 
         /* Utilities */
         .text-mono {
+            font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
         }
+
+        /* Icons (Heroicons solid, single texture) */
+        .icon {
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+            display: inline-block;
+            vertical-align: -0.125em;
+            fill: currentColor;
+        }
+
+        .nav-icon .icon { width: 18px; height: 18px; }
+        .stat-icon .icon { width: 22px; height: 22px; }
+        .empty-icon .icon { width: 52px; height: 52px; }
 
         .text-truncate {
             overflow: hidden;
@@ -636,7 +710,7 @@
             <div class="sidebar-header">
                 <a href="/web/dashboard" class="logo">
                     <div class="logo-icon">
-                        <span>🛡️</span>
+                        <span style="color: #fff;">{{ icon('shield') }}</span>
                     </div>
                     <span class="logo-text">VulnAnalyzer</span>
                 </a>
@@ -644,53 +718,74 @@
             
             <nav class="nav-section">
                 <div class="nav-label">Overview</div>
-                
+
                 <a href="/web/dashboard" class="nav-item {% if request.url.path == '/web/dashboard' %}active{% endif %}">
-                    <span class="nav-icon">📊</span>
+                    <span class="nav-icon">{{ icon('dashboard') }}</span>
                     <span>Dashboard</span>
                 </a>
-                
-                <a href="/web/scans" class="nav-item {% if '/web/scans' in request.url.path and '/new' not in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">🔍</span>
-                    <span>Scans</span>
-                </a>
-                
-                <a href="/web/scan/new" class="nav-item {% if '/web/scan/new' in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">➕</span>
-                    <span>New Scan</span>
-                </a>
 
-                <a href="/web/subdomain/new" class="nav-item {% if '/web/subdomain/new' in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">🌐</span>
-                    <span>New Subdomain</span>
-                </a>
+                {% set is_scan = '/web/scan' in request.url.path %}
+                <div class="nav-group {% if is_scan %}open{% endif %}" data-nav-group>
+                    <button type="button" class="nav-group-toggle">
+                        <span class="nav-icon">{{ icon('scan') }}</span>
+                        <span>Scan</span>
+                        <span class="nav-chevron">{{ icon('chevron-down') }}</span>
+                    </button>
+                    <div class="nav-group-items">
+                        <a href="/web/scans" class="nav-item {% if '/web/scans' in request.url.path %}active{% endif %}">
+                            <span>Scans</span>
+                        </a>
+                        <a href="/web/scan/new" class="nav-item {% if '/web/scan/new' in request.url.path %}active{% endif %}">
+                            <span>New Scan</span>
+                        </a>
+                    </div>
+                </div>
 
-                <a href="/web/enum/subdomains" class="nav-item {% if '/web/enum/subdomains' in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">🌍</span>
-                    <span>Subdomain List</span>
-                </a>
+                {% set is_subdomain = '/web/subdomain' in request.url.path or '/web/enum/subdomains' in request.url.path %}
+                <div class="nav-group {% if is_subdomain %}open{% endif %}" data-nav-group>
+                    <button type="button" class="nav-group-toggle">
+                        <span class="nav-icon">{{ icon('globe') }}</span>
+                        <span>Subdomain</span>
+                        <span class="nav-chevron">{{ icon('chevron-down') }}</span>
+                    </button>
+                    <div class="nav-group-items">
+                        <a href="/web/enum/subdomains" class="nav-item {% if '/web/enum/subdomains' in request.url.path %}active{% endif %}">
+                            <span>Subdomain List</span>
+                        </a>
+                        <a href="/web/subdomain/new" class="nav-item {% if '/web/subdomain/new' in request.url.path %}active{% endif %}">
+                            <span>New Subdomain</span>
+                        </a>
+                    </div>
+                </div>
 
-                <a href="/web/fuzz/new" class="nav-item {% if '/web/fuzz/new' in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">📁</span>
-                    <span>New Fuzzing</span>
-                </a>
+                {% set is_fuzz = '/web/fuzz' in request.url.path or '/web/enum/fuzz' in request.url.path %}
+                <div class="nav-group {% if is_fuzz %}open{% endif %}" data-nav-group>
+                    <button type="button" class="nav-group-toggle">
+                        <span class="nav-icon">{{ icon('folder') }}</span>
+                        <span>Fuzzing</span>
+                        <span class="nav-chevron">{{ icon('chevron-down') }}</span>
+                    </button>
+                    <div class="nav-group-items">
+                        <a href="/web/enum/fuzz" class="nav-item {% if '/web/enum/fuzz' in request.url.path %}active{% endif %}">
+                            <span>Fuzzing List</span>
+                        </a>
+                        <a href="/web/fuzz/new" class="nav-item {% if '/web/fuzz/new' in request.url.path %}active{% endif %}">
+                            <span>New Fuzzing</span>
+                        </a>
+                    </div>
+                </div>
 
-                <a href="/web/enum/fuzz" class="nav-item {% if '/web/enum/fuzz' in request.url.path %}active{% endif %}">
-                    <span class="nav-icon">🔍</span>
-                    <span>Fuzzing List</span>
-                </a>
-                
                 <div class="nav-divider"></div>
-                
+
                 <div class="nav-label">Resources</div>
-                
+
                 <a href="/docs" class="nav-item" target="_blank">
-                    <span class="nav-icon">📖</span>
+                    <span class="nav-icon">{{ icon('book') }}</span>
                     <span>Documentation</span>
                 </a>
-                
+
                 <a href="/api/docs" class="nav-item" target="_blank">
-                    <span class="nav-icon">⚡</span>
+                    <span class="nav-icon">{{ icon('bolt') }}</span>
                     <span>API Reference</span>
                 </a>
             </nav>
@@ -705,6 +800,32 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Collapsible sidebar nav groups
+        document.querySelectorAll('[data-nav-group] .nav-group-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                btn.closest('[data-nav-group]').classList.toggle('open');
+            });
+        });
+
+        // Heroicons (solid) for client-rendered markup. Use: window.icon('alert')
+        window.ICON_PATHS = {
+            'scan': '<path fill-rule="evenodd" clip-rule="evenodd" d="M10.5 3.75C6.77208 3.75 3.75 6.77208 3.75 10.5C3.75 14.2279 6.77208 17.25 10.5 17.25C12.3642 17.25 14.0506 16.4953 15.273 15.273C16.4953 14.0506 17.25 12.3642 17.25 10.5C17.25 6.77208 14.2279 3.75 10.5 3.75ZM2.25 10.5C2.25 5.94365 5.94365 2.25 10.5 2.25C15.0563 2.25 18.75 5.94365 18.75 10.5C18.75 12.5078 18.032 14.3491 16.8399 15.7793L21.5303 20.4697C21.8232 20.7626 21.8232 21.2374 21.5303 21.5303C21.2374 21.8232 20.7626 21.8232 20.4697 21.5303L15.7793 16.8399C14.3491 18.032 12.5078 18.75 10.5 18.75C5.94365 18.75 2.25 15.0563 2.25 10.5Z"/>',
+            'warning': '<path fill-rule="evenodd" clip-rule="evenodd" d="M9.40123 3.0034C10.5557 1.00229 13.4439 1.00229 14.5983 3.0034L21.9527 15.7509C23.1065 17.7509 21.6631 20.2501 19.3541 20.2501H4.64546C2.33649 20.2501 0.893061 17.7509 2.04691 15.7509L9.40123 3.0034ZM12 8.25C12.4142 8.25 12.75 8.58579 12.75 9V12.75C12.75 13.1642 12.4142 13.5 12 13.5C11.5858 13.5 11.25 13.1642 11.25 12.75V9C11.25 8.58579 11.5858 8.25 12 8.25ZM12 16.5C12.4142 16.5 12.75 16.1642 12.75 15.75C12.75 15.3358 12.4142 15 12 15C11.5858 15 11.25 15.3358 11.25 15.75C11.25 16.1642 11.5858 16.5 12 16.5Z"/>',
+            'alert': '<path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM12 8.25C12.4142 8.25 12.75 8.58579 12.75 9V12.75C12.75 13.1642 12.4142 13.5 12 13.5C11.5858 13.5 11.25 13.1642 11.25 12.75V9C11.25 8.58579 11.5858 8.25 12 8.25ZM12 16.5C12.4142 16.5 12.75 16.1642 12.75 15.75C12.75 15.3358 12.4142 15 12 15C11.5858 15 11.25 15.3358 11.25 15.75C11.25 16.1642 11.5858 16.5 12 16.5Z"/>',
+            'info': '<path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM10.9562 10.5584C12.1025 9.98533 13.3931 11.0206 13.0823 12.2639L12.3733 15.0999L12.4148 15.0792C12.7852 14.894 13.2357 15.0441 13.421 15.4146C13.6062 15.7851 13.4561 16.2356 13.0856 16.4208L13.0441 16.4416C11.8979 17.0147 10.6072 15.9794 10.9181 14.7361L11.6271 11.9001L11.5856 11.9208C11.2151 12.1061 10.7646 11.9559 10.5793 11.5854C10.3941 11.2149 10.5443 10.7644 10.9148 10.5792L10.9562 10.5584ZM12 9C12.4142 9 12.75 8.66421 12.75 8.25C12.75 7.83579 12.4142 7.5 12 7.5C11.5858 7.5 11.25 7.83579 11.25 8.25C11.25 8.66421 11.5858 9 12 9Z"/>',
+            'computer': '<path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 5.25C2.25 3.59315 3.59315 2.25 5.25 2.25H18.75C20.4069 2.25 21.75 3.59315 21.75 5.25V15C21.75 16.6569 20.4069 18 18.75 18H15.75V18.2574C15.75 18.8541 15.9871 19.4264 16.409 19.8483L17.0303 20.4697C17.2448 20.6842 17.309 21.0068 17.1929 21.287C17.0768 21.5673 16.8033 21.75 16.5 21.75H7.5C7.19665 21.75 6.92318 21.5673 6.80709 21.287C6.691 21.0068 6.75517 20.6842 6.96967 20.4697L7.59099 19.8484C8.01295 19.4264 8.25 18.8541 8.25 18.2574V18H5.25C3.59315 18 2.25 16.6569 2.25 15V5.25ZM3.75 5.25V12.75C3.75 13.5784 4.42157 14.25 5.25 14.25H18.75C19.5784 14.25 20.25 13.5784 20.25 12.75V5.25C20.25 4.42157 19.5784 3.75 18.75 3.75H5.25C4.42157 3.75 3.75 4.42157 3.75 5.25Z"/>',
+            'bulb': '<path d="M12 0.75C7.44365 0.75 3.75 4.44365 3.75 9C3.75 12.0508 5.40631 14.7138 7.86516 16.1405C8.55062 16.5382 8.97985 17.1484 8.99928 17.7626C9.00999 18.1013 9.24656 18.3908 9.5764 18.4687C9.92778 18.5518 10.2859 18.6171 10.6496 18.6639C10.9732 18.7055 11.2502 18.4462 11.2502 18.12V13.4589C10.9309 13.4236 10.618 13.366 10.3132 13.2875C9.9121 13.1843 9.67061 12.7754 9.77385 12.3743C9.8771 11.9731 10.286 11.7316 10.6871 11.8349C11.1059 11.9427 11.5458 12.0002 12.0002 12.0002C12.4546 12.0002 12.8944 11.9427 13.3132 11.8349C13.7144 11.7316 14.1233 11.9731 14.2265 12.3743C14.3298 12.7754 14.0883 13.1843 13.6871 13.2875C13.3823 13.366 13.0695 13.4236 12.7502 13.4589V18.1199C12.7502 18.4462 13.0272 18.7054 13.3508 18.6638C13.7144 18.6171 14.0723 18.5518 14.4236 18.4687C14.7534 18.3908 14.99 18.1013 15.0007 17.7626C15.0201 17.1484 15.4494 16.5382 16.1348 16.1405C18.5937 14.7138 20.25 12.0508 20.25 9C20.25 4.44365 16.5563 0.75 12 0.75Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9.01314 19.8997C9.09034 19.4927 9.48282 19.2254 9.88978 19.3026C10.5727 19.4321 11.2781 19.5 12 19.5C12.7219 19.5 13.4273 19.4321 14.1102 19.3026C14.5172 19.2254 14.9097 19.4927 14.9869 19.8997C15.0641 20.3066 14.7967 20.6991 14.3898 20.7763C13.6151 20.9232 12.8162 21 12 21C11.1838 21 10.3849 20.9232 9.61022 20.7763C9.20327 20.6991 8.93594 20.3066 9.01314 19.8997Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9.75407 22.344C9.79717 21.932 10.1661 21.633 10.578 21.6761C11.0451 21.7249 11.5195 21.75 12 21.75C12.4805 21.75 12.9549 21.7249 13.422 21.6761C13.8339 21.633 14.2028 21.932 14.2459 22.344C14.289 22.7559 13.99 23.1248 13.578 23.1679C13.0592 23.2222 12.5327 23.25 12 23.25C11.4673 23.25 10.9408 23.2222 10.422 23.1679C10.01 23.1248 9.71097 22.7559 9.75407 22.344Z"/>',
+            'check-circle': '<path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM15.6103 10.1859C15.8511 9.84887 15.773 9.38046 15.4359 9.1397C15.0989 8.89894 14.6305 8.97701 14.3897 9.31407L11.1543 13.8436L9.53033 12.2197C9.23744 11.9268 8.76256 11.9268 8.46967 12.2197C8.17678 12.5126 8.17678 12.9874 8.46967 13.2803L10.7197 15.5303C10.8756 15.6862 11.0921 15.7656 11.3119 15.7474C11.5316 15.7293 11.7322 15.6153 11.8603 15.4359L15.6103 10.1859Z"/>',
+            'x-circle': '<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25C6.61522 2.25 2.25 6.61522 2.25 12C2.25 17.3848 6.61522 21.75 12 21.75C17.3848 21.75 21.75 17.3848 21.75 12C21.75 6.61522 17.3848 2.25 12 2.25ZM10.2803 9.21967C9.98744 8.92678 9.51256 8.92678 9.21967 9.21967C8.92678 9.51256 8.92678 9.98744 9.21967 10.2803L10.9393 12L9.21967 13.7197C8.92678 14.0126 8.92678 14.4874 9.21967 14.7803C9.51256 15.0732 9.98744 15.0732 10.2803 14.7803L12 13.0607L13.7197 14.7803C14.0126 15.0732 14.4874 15.0732 14.7803 14.7803C15.0732 14.4874 15.0732 14.0126 14.7803 13.7197L13.0607 12L14.7803 10.2803C15.0732 9.98744 15.0732 9.51256 14.7803 9.21967C14.4874 8.92678 14.0126 8.92678 13.7197 9.21967L12 10.9393L10.2803 9.21967Z"/>',
+            'clipboard': '<path fill-rule="evenodd" clip-rule="evenodd" d="M7.50183 6H11.2477L11.25 6H14.6299C16.4915 6.00268 17.9999 7.51269 17.9999 9.375V18.75C19.6567 18.75 20.9999 17.4068 20.9999 15.75V6.10821C20.9999 4.60282 19.8751 3.2966 18.3358 3.16884C18.1121 3.15027 17.8879 3.13321 17.6632 3.11767C17.1633 2.15647 16.1583 1.5 15 1.5H13.5C12.3417 1.5 11.3367 2.15647 10.8368 3.11765C10.6121 3.13319 10.3878 3.15026 10.1639 3.16884C8.66165 3.29353 7.55421 4.54069 7.50183 6ZM13.5 3C12.6716 3 12 3.67157 12 4.5H16.5C16.5 3.67157 15.8284 3 15 3H13.5Z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M3 9.375C3 8.33947 3.83947 7.5 4.875 7.5H14.625C15.6605 7.5 16.5 8.33947 16.5 9.375V20.625C16.5 21.6605 15.6605 22.5 14.625 22.5H4.875C3.83947 22.5 3 21.6605 3 20.625V9.375ZM6 12C6 11.5858 6.33579 11.25 6.75 11.25H6.7575C7.17171 11.25 7.5075 11.5858 7.5075 12V12.0075C7.5075 12.4217 7.17171 12.7575 6.7575 12.7575H6.75C6.33579 12.7575 6 12.4217 6 12.0075V12ZM8.25 12C8.25 11.5858 8.58579 11.25 9 11.25H12.75C13.1642 11.25 13.5 11.5858 13.5 12C13.5 12.4142 13.1642 12.75 12.75 12.75H9C8.58579 12.75 8.25 12.4142 8.25 12ZM6 15C6 14.5858 6.33579 14.25 6.75 14.25H6.7575C7.17171 14.25 7.5075 14.5858 7.5075 15V15.0075C7.5075 15.4217 7.17171 15.7575 6.7575 15.7575H6.75C6.33579 15.7575 6 15.4217 6 15.0075V15ZM8.25 15C8.25 14.5858 8.58579 14.25 9 14.25H12.75C13.1642 14.25 13.5 14.5858 13.5 15C13.5 15.4142 13.1642 15.75 12.75 15.75H9C8.58579 15.75 8.25 15.4142 8.25 15ZM6 18C6 17.5858 6.33579 17.25 6.75 17.25H6.7575C7.17171 17.25 7.5075 17.5858 7.5075 18V18.0075C7.5075 18.4217 7.17171 18.7575 6.7575 18.7575H6.75C6.33579 18.7575 6 18.4217 6 18.0075V18ZM8.25 18C8.25 17.5858 8.58579 17.25 9 17.25H12.75C13.1642 17.25 13.5 17.5858 13.5 18C13.5 18.4142 13.1642 18.75 12.75 18.75H9C8.58579 18.75 8.25 18.4142 8.25 18Z"/>',
+            'rocket': '<path fill-rule="evenodd" clip-rule="evenodd" d="M9.315 7.58365C12.1956 3.88296 16.6946 1.50021 21.75 1.5C21.9489 1.49999 22.1397 1.57901 22.2803 1.71966C22.421 1.86031 22.5 2.05108 22.5 2.25C22.5 7.30564 20.1173 11.805 16.4165 14.6859C16.4715 15.0329 16.5 15.3883 16.5 15.75C16.5 19.4779 13.4779 22.5 9.75 22.5C9.33579 22.5 9 22.1642 9 21.75V17.6185C8.99075 17.6118 8.98163 17.6049 8.97264 17.5978C8.02063 16.8429 7.15799 15.9803 6.40312 15.0282C6.39577 15.019 6.38866 15.0096 6.38179 15H2.25C1.83579 15 1.5 14.6642 1.5 14.25C1.5 10.5221 4.52208 7.5 8.25 7.5C8.61198 7.5 8.96772 7.52856 9.315 7.58365ZM15 6.75C13.7574 6.75 12.75 7.75736 12.75 9C12.75 10.2426 13.7574 11.25 15 11.25C16.2426 11.25 17.25 10.2426 17.25 9C17.25 7.75736 16.2426 6.75 15 6.75Z"/><path d="M5.26036 17.2418C5.59237 16.9942 5.66074 16.5242 5.41306 16.1922C5.16539 15.8602 4.69546 15.7918 4.36345 16.0395C3.08209 16.9954 2.25 18.5256 2.25 20.2499C2.25 20.5255 2.27129 20.7966 2.31246 21.0615C2.36259 21.3842 2.61574 21.6373 2.93842 21.6875C3.20336 21.7286 3.47445 21.7499 3.75 21.7499C5.47434 21.7499 7.00452 20.9178 7.9604 19.6365C8.20808 19.3045 8.13971 18.8345 7.8077 18.5869C7.47569 18.3392 7.00576 18.4075 6.75809 18.7396C6.07313 19.6577 4.98081 20.2499 3.75 20.2499C3.75 19.0191 4.34218 17.9268 5.26036 17.2418Z"/>'
+        };
+        window.icon = function (name, cls) {
+            var paths = window.ICON_PATHS[name] || '';
+            return '<svg class="icon' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' + paths + '</svg>';
+        };
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
