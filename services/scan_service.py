@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from sqlalchemy.orm import Session
 
 from api.database import SessionLocal
 from api.models import Scan

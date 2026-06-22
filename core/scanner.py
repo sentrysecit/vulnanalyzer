@@ -1,11 +1,13 @@
 import nmap
 import requests
 from concurrent.futures import ThreadPoolExecutor
-from core.utils import parse_target, is_valid_target
+from core.utils import parse_target
 
 from modules.fingerprints.service_fingerprints import (
     detect_web_technology,
     detect_services,
+    detect_os,
+    detect_dc_ports,
 )
 
 
@@ -43,10 +45,15 @@ class VulnerabilityScanner:
             try:
                 host_state = self.nm[host].state()
                 os_matches = self.nm[host].get("osmatch", [])
+                os_normalized = detect_os(os_matches)
                 self.results[host] = {
                     "status": host_state,
                     "ports": {},
                     "os": os_matches,
+                    "os_name": os_normalized.get("name"),
+                    "os_family": os_normalized.get("family"),
+                    "os_accuracy": os_normalized.get("accuracy"),
+                    "os_cpe": os_normalized.get("cpe"),
                     "vulnerabilities": [],
                 }
 
@@ -68,6 +75,41 @@ class VulnerabilityScanner:
                 print(f"[!] Error processing host {host}: {e}")
 
         return self.results
+
+    def analyze_ad(self):
+        """Run Active Directory analysis on Windows hosts"""
+        from core.ad_scanner import ADScanner
+        
+        for host in self.results:
+            host_data = self.results[host]
+            os_family = host_data.get("os_family")
+            
+            if os_family != "Windows":
+                continue
+            
+            open_ports = host_data.get("ports", {})
+            dc_info = detect_dc_ports(open_ports)
+            
+            if dc_info.get("is_domain_controller") or dc_info.get("dc_score", 0) >= 1:
+                print(f"[*] Running AD analysis on Windows host: {host}")
+                
+                ad_scanner = ADScanner(host)
+                ad_results = ad_scanner.run(open_ports)
+                
+                self.results[host]["ad"] = ad_results
+                
+                if ad_results.get("vulnerabilities"):
+                    for vuln in ad_results["vulnerabilities"]:
+                        vuln_entry = {
+                            "type": "ad",
+                            "cve_id": vuln.get("cve"),
+                            "title": vuln.get("name"),
+                            "description": vuln.get("description"),
+                            "severity": vuln.get("severity"),
+                            "service": "Active Directory",
+                            "recommendation": f"Check {vuln.get('name')} - {vuln.get('description')}",
+                        }
+                        host_data["vulnerabilities"].append(vuln_entry)
 
     def detect_vulnerabilities(self):
         if not self.check_cve:
@@ -149,10 +191,6 @@ class VulnerabilityScanner:
             from core.exploit_finder import ExploitFinder
 
             finder = ExploitFinder()
-            cve_ids = list(
-                set(v.get("cve_id") for v in self.cve_results if v.get("cve_id"))
-            )
-
             for host in self.results:
                 for vuln in self.results[host]["vulnerabilities"]:
                     if vuln.get("type") == "cve":
@@ -257,6 +295,9 @@ class VulnerabilityScanner:
 
     def run(self):
         self.scan_network()
+        
+        if self.scan_type == "full":
+            self.analyze_ad()
 
         if self.check_cve or self.find_exploits:
             self.detect_vulnerabilities()

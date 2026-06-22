@@ -58,3 +58,85 @@ def detect_services(host, port_info):
         return "FTP Service"
 
     return f"Unknown Service: {name} {version}"
+
+
+def detect_os(osmatch_data):
+    """
+    Normaliza los datos de OS detection de nmap.
+
+    Args:
+        osmatch_data: Lista de osmatch de nmap (cada elemento tiene 'name', 'accuracy', 'osclass')
+
+    Returns:
+        Dict con 'name', 'family', 'accuracy', 'cpe'
+    """
+    if not osmatch_data:
+        return {"name": None, "family": "Unknown", "accuracy": None, "cpe": None}
+
+    best_match = osmatch_data[0]
+    name = best_match.get("name", "Unknown")
+    accuracy = best_match.get("accuracy", "0")
+
+    osclass_list = best_match.get("osclass", [])
+    cpe = None
+
+    family = "Unknown"
+    for osclass in osclass_list:
+        os_family = osclass.get("osfamily", "").lower()
+
+        if "windows" in os_family:
+            family = "Windows"
+            cpe = osclass.get("cpe", "")
+            break
+        elif "linux" in os_family:
+            family = "Linux"
+            cpe = osclass.get("cpe", "")
+            break
+        elif "mac" in os_family or "darwin" in os_family:
+            family = "macOS"
+            cpe = osclass.get("cpe", "")
+            break
+        elif os_family and family == "Unknown":
+            family = os_family.capitalize()
+            cpe = osclass.get("cpe", "")
+
+    return {"name": name, "family": family, "accuracy": accuracy, "cpe": cpe}
+
+
+DC_PORTS = {
+    389: "LDAP",
+    636: "LDAPS",
+    88: "Kerberos",
+    53: "DNS",
+    464: "Kerberos Password Change",
+    3268: "LDAP Global Catalog",
+    3269: "LDAP GC SSL",
+}
+
+
+def detect_dc_ports(open_ports):
+    """
+    Detecta si un host Windows es un Domain Controller basado en puertos.
+    
+    Args:
+        open_ports: Dict de puertos abiertos {port: info}
+        
+    Returns:
+        Dict con 'is_domain_controller', 'dc_ports', 'dc_score'
+    """
+    if not open_ports:
+        return {"is_domain_controller": False, "dc_ports": [], "dc_score": 0}
+    
+    dc_open = []
+    for port in open_ports:
+        if port in DC_PORTS:
+            dc_open.append(DC_PORTS[port])
+    
+    dc_score = len(dc_open)
+    is_dc = dc_score >= 3
+    
+    return {
+        "is_domain_controller": is_dc,
+        "dc_ports": dc_open,
+        "dc_score": dc_score
+    }

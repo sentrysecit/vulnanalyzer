@@ -1,6 +1,4 @@
 import requests
-import json
-import base64
 import time
 from core.utils import generate_random_string
 

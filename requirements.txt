@@ -10,3 +10,5 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
+ruff==0.15.15
+bandit==1.9.4

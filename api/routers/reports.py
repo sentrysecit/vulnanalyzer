@@ -14,12 +14,15 @@ router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 
 def get_report_template_path():
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     return os.path.join(base_dir, "web", "templates")
 
 
 def get_report_service():
     from services.report_service import ReportService
+
     return ReportService()
 
 
@@ -87,6 +90,7 @@ def get_report_preview(scan_id: int, db: Session = Depends(get_db)):
 
     template_path = get_report_template_path()
     from jinja2 import Environment, FileSystemLoader
+
     env = Environment(loader=FileSystemLoader(template_path))
     template = env.get_template("reports/view.html")
 
@@ -101,8 +105,10 @@ def get_report_preview(scan_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{scan_id}/download/{format}")
 def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
-    if format not in ["html", "json"]:
-        raise HTTPException(status_code=400, detail="Invalid format. Use 'html' or 'json'")
+    if format not in ["html", "json", "markdown"]:
+        raise HTTPException(
+            status_code=400, detail="Invalid format. Use 'html', 'json' or 'markdown'"
+        )
 
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
@@ -111,7 +117,9 @@ def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
     report_data = {
         "id": scan.id,
         "title": f"Vulnerability Report - {scan.target}",
-        "timestamp": scan.created_at.isoformat() if scan.created_at else datetime.now().isoformat(),
+        "timestamp": scan.created_at.isoformat()
+        if scan.created_at
+        else datetime.now().isoformat(),
         "target": scan.target,
         "scan_type": scan.scan_type,
         "status": scan.status,
@@ -125,6 +133,24 @@ def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
         },
         "results": scan.results,
     }
+
+    if format == "markdown":
+        report_service = get_report_service()
+        md_content = report_service.generate_markdown_from_data(
+            data={"scan_results": scan.results or {}},
+            scan=scan,
+            title=f"Vulnerability Report - {scan.target}",
+        )
+        temp_file = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".md", delete=False, dir="/tmp", encoding="utf-8"
+        )
+        temp_file.write(md_content)
+        temp_file.close()
+        return FileResponse(
+            temp_file.name,
+            media_type="text/markdown",
+            filename=f"scan_{scan_id}_report.md",
+        )
 
     if format == "json":
         temp_file = tempfile.NamedTemporaryFile(

@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum, Boolean, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Text,
+    Boolean,
+    ForeignKey,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from api.database import Base
@@ -36,6 +44,12 @@ class Scan(Base):
     medium_count = Column(Integer, default=0)
     low_count = Column(Integer, default=0)
     info_count = Column(Integer, default=0)
+    os_name = Column(String(255), nullable=True)
+    os_family = Column(String(50), nullable=True)
+    os_accuracy = Column(String(10), nullable=True)
+    is_domain_controller = Column(Boolean, default=False)
+    domain_name = Column(String(255), nullable=True)
+    ad_vulnerabilities = Column(Integer, default=0)
 
     @property
     def results(self):
@@ -127,6 +141,7 @@ class Vulnerability(Base):
     exploit_available = Column(Boolean, default=False)
     edb_id = Column(String(20), nullable=True)
     description = Column(Text, nullable=True)
+    host_os = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     @property

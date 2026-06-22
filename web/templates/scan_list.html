@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Scans - VulnAnalyzer{% endblock %}
 
@@ -10,7 +11,7 @@
         <p class="page-subtitle">View and manage all vulnerability assessments</p>
     </div>
     <a href="/web/scan/new" class="btn btn-primary">
-        <span>➕</span> New Scan
+        <span>{{ icon('plus') }}</span> New Scan
     </a>
 </div>
 
@@ -41,7 +42,7 @@
     </div>
     <div class="filter-group" style="flex: 0 0 auto; display: flex; align-items: flex-end;">
         <button class="btn btn-primary" onclick="loadScans(1)">
-            <span>🔍</span> Filter
+            <span>{{ icon('scan') }}</span> Filter
         </button>
     </div>
 </div>
@@ -107,7 +108,7 @@ async function loadScans(page = 1) {
                 <tr>
                     <td colspan="10">
                         <div class="empty-state">
-                            <div class="empty-icon">📋</div>
+                            <div class="empty-icon">${window.icon('clipboard')}</div>
                             <div class="empty-title">No scans found</div>
                             <div class="empty-description">Try adjusting your filters or start a new scan</div>
                             <a href="/web/scan/new" class="btn btn-primary">New Scan</a>
@@ -174,7 +175,7 @@ async function loadScans(page = 1) {
             <tr>
                 <td colspan="10">
                     <div class="empty-state">
-                        <div class="empty-icon">⚠️</div>
+                        <div class="empty-icon">${window.icon('warning')}</div>
                         <div class="empty-title">Error loading scans</div>
                         <div class="empty-description">Please try again</div>
                     </div>

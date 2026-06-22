@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import List
 from datetime import datetime
 import os
 import threading
@@ -65,12 +65,14 @@ def start_subdomain_enum(request: SubdomainRequest, db: Session = Depends(get_db
 
     output_dir = get_output_dir()
     output_file = os.path.join(output_dir, f"subdomains_{subdomain_enum.id}.txt")
-    alive_file = os.path.join(output_dir, f"subdomains_{subdomain_enum.id}_alive.txt")
-
     def run_in_background():
         db = SessionLocal()
         try:
-            enum = db.query(SubdomainEnum).filter(SubdomainEnum.id == subdomain_enum.id).first()
+            enum = (
+                db.query(SubdomainEnum)
+                .filter(SubdomainEnum.id == subdomain_enum.id)
+                .first()
+            )
             if not enum:
                 return
 
@@ -135,7 +137,6 @@ def list_subdomain_enums(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
 ):
-    total = db.query(SubdomainEnum).count()
     enums = (
         db.query(SubdomainEnum)
         .order_by(SubdomainEnum.created_at.desc())
@@ -154,7 +155,9 @@ def get_subdomain_enum(enum_id: int, db: Session = Depends(get_db)):
     return SubdomainDetail.model_validate(enum)
 
 
-@router.get("/subdomain/{enum_id}/results", response_model=List[SubdomainResultResponse])
+@router.get(
+    "/subdomain/{enum_id}/results", response_model=List[SubdomainResultResponse]
+)
 def get_subdomain_results(enum_id: int, db: Session = Depends(get_db)):
     enum = db.query(SubdomainEnum).filter(SubdomainEnum.id == enum_id).first()
     if not enum:
@@ -190,7 +193,9 @@ def start_fuzz(request: FuzzRequest, db: Session = Depends(get_db)):
             db.commit()
 
             try:
-                extensions = request.extensions.split(",") if request.extensions else None
+                extensions = (
+                    request.extensions.split(",") if request.extensions else None
+                )
                 fuzzer = PathFuzzer(
                     target=request.target,
                     wordlist=request.wordlist,
@@ -242,7 +247,6 @@ def list_fuzz_jobs(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
 ):
-    total = db.query(PathFuzz).count()
     fuzz_jobs = (
         db.query(PathFuzz)
         .order_by(PathFuzz.created_at.desc())

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Dashboard - VulnAnalyzer{% endblock %}
 
@@ -12,28 +13,28 @@
 <!-- Stats Grid -->
 <div class="stat-grid">
     <div class="stat-card blue animate-in animate-in-delay-1">
-        <div class="stat-icon blue">🔍</div>
+        <div class="stat-icon blue">{{ icon('scan') }}</div>
         <div class="stat-value text-mono" id="total-scans">0</div>
         <div class="stat-label">Total Scans</div>
         <div class="stat-trend up">↑ 100% completed</div>
     </div>
 
     <div class="stat-card green animate-in animate-in-delay-2">
-        <div class="stat-icon green">🎯</div>
+        <div class="stat-icon green">{{ icon('target') }}</div>
         <div class="stat-value text-mono" id="total-targets">0</div>
         <div class="stat-label">Targets Scanned</div>
         <div class="stat-trend" style="color: var(--text-tertiary);">Unique hosts</div>
     </div>
 
     <div class="stat-card orange animate-in animate-in-delay-3">
-        <div class="stat-icon orange">⚠️</div>
+        <div class="stat-icon orange">{{ icon('warning') }}</div>
         <div class="stat-value text-mono" id="total-vulns">0</div>
         <div class="stat-label">Vulnerabilities</div>
         <div class="stat-trend" style="color: var(--text-tertiary);">Detected issues</div>
     </div>
 
     <div class="stat-card red animate-in animate-in-delay-4">
-        <div class="stat-icon red">🚨</div>
+        <div class="stat-icon red">{{ icon('alert') }}</div>
         <div class="stat-value text-mono" id="critical-count">0</div>
         <div class="stat-label">Critical Issues</div>
         <div class="stat-trend down">Requires attention</div>
@@ -45,10 +46,7 @@
     <!-- Recent Scans -->
     <div class="card animate-in animate-in-delay-2" style="animation-delay: 0.25s;">
         <div class="card-header">
-            <h3 class="card-title">
-                <span>📋</span>
-                Recent Scans
-            </h3>
+            <h3 class="card-title">Recent Scans</h3>
             <a href="/web/scans" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
                 View All
             </a>
@@ -59,6 +57,7 @@
                     <tr>
                         <th>Target</th>
                         <th>Type</th>
+                        <th>OS</th>
                         <th>Status</th>
                         <th>Vulns</th>
                         <th>Date</th>
@@ -66,7 +65,7 @@
                 </thead>
                 <tbody id="recent-scans">
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <div class="skeleton" style="height: 20px; width: 60%; margin: 0 auto 10px;"></div>
                                 <div class="skeleton" style="height: 20px; width: 40%; margin: 0 auto;"></div>
@@ -98,7 +97,7 @@
         <div class="card animate-in" style="animation-delay: 0.35s;">
             <div class="card-header">
                 <h3 class="card-title">
-                    <span>🎯</span>
+                    <span>{{ icon('target') }}</span>
                     Top Vulnerable
                 </h3>
             </div>
@@ -213,7 +212,7 @@
             if (!data.top_vulnerable_targets || data.top_vulnerable_targets.length === 0) {
                 topVulnContainer.innerHTML = `
                 <div class="empty-state" style="padding: 40px 20px;">
-                    <div class="empty-icon">🛡️</div>
+                    <div class="empty-icon">${window.icon('shield')}</div>
                     <div class="empty-title">No vulnerabilities found</div>
                     <div class="empty-description">Your targets are secure</div>
                 </div>
@@ -257,7 +256,7 @@
                 <tr>
                     <td colspan="5">
                         <div class="empty-state">
-                            <div class="empty-icon">📋</div>
+                            <div class="empty-icon">${window.icon('clipboard')}</div>
                             <div class="empty-title">No scans yet</div>
                             <div class="empty-description">Start your first vulnerability scan</div>
                             <a href="/web/scan/new" class="btn btn-primary">New Scan</a>
@@ -273,6 +272,17 @@
                     </td>
                     <td>
                         <span class="badge badge-gray">${scan.scan_type}</span>
+                    </td>
+                    <td>
+                        ${scan.os_family && scan.os_family !== 'Unknown' ? `
+                            ${scan.os_family === 'Windows' ? `
+                                <span class="badge" style="background: #0078D4; color: white; font-size: 10px;">Windows</span>
+                            ` : scan.os_family === 'Linux' ? `
+                                <span class="badge" style="background: #E95420; color: white; font-size: 10px;">Linux</span>
+                            ` : scan.os_family === 'macOS' ? `
+                                <span class="badge" style="background: #333; color: white; font-size: 10px;">macOS</span>
+                            ` : `<span class="badge badge-gray">${scan.os_family}</span>`}
+                        ` : `<span style="color: var(--text-tertiary); font-size: 12px;">—</span>`}
                     </td>
                     <td>
                         <span class="badge badge-${scan.status === 'completed' ? 'green' : scan.status === 'running' ? 'blue' : scan.status === 'failed' ? 'red' : 'gray'}">

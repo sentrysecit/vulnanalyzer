@@ -1,7 +1,6 @@
 import subprocess
 import os
-import re
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 
 
 WORDLISTS = {
@@ -17,8 +16,7 @@ EXTENSIONS = ["", ".php", ".html", ".txt", ".json", ".xml", ".asp", ".aspx", ".j
 
 def check_tool(tool):
     result = subprocess.run(
-        f"which {tool}",
-        shell=True,
+        ["which", tool],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -41,13 +39,15 @@ def parse_url(url):
 def detect_base_response(url, extensions=None):
     print("[*] Detectando respuesta base...")
 
-    url_info = parse_url(url)
-
     if not url.endswith("/"):
         url = url.rstrip("/") + "/"
 
-    cmd = f"curl -s -o /dev/null -w '%{{http_code}}:%{{size}}' {url}"
-    response = subprocess.getoutput(cmd)
+    result = subprocess.run(
+        ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}:%{size}", url],
+        capture_output=True,
+        text=True,
+    )
+    response = result.stdout.strip()
 
     parts = response.split(":")
     status_code = parts[0] if parts else "000"
@@ -111,7 +111,7 @@ def run_ffuf_path(
 
     cmd.extend(["-of", "csv", "-o", "ffuf_paths.csv"])
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    subprocess.run(cmd, capture_output=True, text=True)
 
     found = []
 
@@ -144,17 +144,18 @@ def run_httpx(input_file, output="alive_paths.txt", silent=True):
     httpx_path = os.path.expanduser("~/go/bin/httpx")
 
     if not os.path.exists(httpx_path):
-        httpx_path = subprocess.getoutput("which httpx").strip()
+        httpx_path = subprocess.run(
+            ["which", "httpx"], capture_output=True, text=True
+        ).stdout.strip()
         if not httpx_path:
             print("[!] httpx no instalado")
             return False
 
-    cmd = f"{httpx_path} -l {input_file}"
+    cmd = [httpx_path, "-l", input_file, "-o", output]
     if silent:
-        cmd += " -silent"
-    cmd += f" -o {output}"
+        cmd.append("-silent")
 
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    subprocess.run(cmd, capture_output=True, text=True)
 
     return os.path.exists(output) and os.path.getsize(output) > 0
 

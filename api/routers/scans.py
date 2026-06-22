@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 import json
 import threading
 
 from api.database import get_db, SessionLocal
-from api.models import Scan, ScanStatus as DBScanStatus, ScanType as DBScanType
+from api.models import Scan, ScanStatus as DBScanStatus
 from api.schemas import (
     ScanCreate,
     ScanResponse,
@@ -133,6 +133,8 @@ def _execute_scan_background(scan_id: int, target: str, scan_type: str):
 
             scan.results_json = json.dumps(results)
             summary = _calculate_summary(results)
+            os_info = _extract_os_info(results)
+            ad_info = _extract_ad_info(results)
             scan.status = DBScanStatus.COMPLETED.value
             scan.total_vulnerabilities = summary["total"]
             scan.critical_count = summary["critical"]
@@ -140,6 +142,12 @@ def _execute_scan_background(scan_id: int, target: str, scan_type: str):
             scan.medium_count = summary["medium"]
             scan.low_count = summary["low"]
             scan.info_count = summary["info"]
+            scan.os_name = os_info.get("name")
+            scan.os_family = os_info.get("family")
+            scan.os_accuracy = os_info.get("accuracy")
+            scan.is_domain_controller = ad_info.get("is_domain_controller", False)
+            scan.domain_name = ad_info.get("domain_name")
+            scan.ad_vulnerabilities = ad_info.get("ad_vulnerabilities", 0)
             scan.completed_at = datetime.now()
 
         except Exception as e:
@@ -172,6 +180,12 @@ def get_scan(scan_id: int, db: Session = Depends(get_db)):
         medium_count=scan.medium_count,
         low_count=scan.low_count,
         info_count=scan.info_count,
+        os_name=scan.os_name,
+        os_family=scan.os_family,
+        os_accuracy=scan.os_accuracy,
+        is_domain_controller=scan.is_domain_controller,
+        domain_name=scan.domain_name,
+        ad_vulnerabilities=scan.ad_vulnerabilities,
         results=scan.results,
         error_message=scan.error_message,
     )
@@ -205,12 +219,16 @@ def update_scan_status(
     if results:
         scan.results_json = json.dumps(results)
         summary = _calculate_summary(results)
+        os_info = _extract_os_info(results)
         scan.total_vulnerabilities = summary["total"]
         scan.critical_count = summary["critical"]
         scan.high_count = summary["high"]
         scan.medium_count = summary["medium"]
         scan.low_count = summary["low"]
         scan.info_count = summary["info"]
+        scan.os_name = os_info.get("name")
+        scan.os_family = os_info.get("family")
+        scan.os_accuracy = os_info.get("accuracy")
 
     if error_message:
         scan.error_message = error_message
@@ -235,3 +253,28 @@ def _calculate_summary(results: dict) -> dict:
                 summary[severity] += 1
 
     return summary
+
+
+def _extract_os_info(results: dict) -> dict:
+    for host, host_data in results.items():
+        os_family = host_data.get("os_family")
+        if os_family and os_family != "Unknown":
+            return {
+                "name": host_data.get("os_name"),
+                "family": os_family,
+                "accuracy": host_data.get("os_accuracy"),
+            }
+    return {"name": None, "family": None, "accuracy": None}
+
+
+def _extract_ad_info(results: dict) -> dict:
+    for host, host_data in results.items():
+        ad_data = host_data.get("ad")
+        if ad_data:
+            ad_vulns = ad_data.get("vulnerabilities", [])
+            return {
+                "is_domain_controller": ad_data.get("is_domain_controller", False),
+                "domain_name": ad_data.get("domain"),
+                "ad_vulnerabilities": len(ad_vulns),
+            }
+    return {"is_domain_controller": False, "domain_name": None, "ad_vulnerabilities": 0}

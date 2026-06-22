@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}New Scan - VulnAnalyzer{% endblock %}
 
@@ -14,7 +15,7 @@
     <div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
         <div class="card-header">
             <h3 class="card-title">
-                <span>🎯</span>
+                <span>{{ icon('target') }}</span>
                 Target Configuration
             </h3>
         </div>
@@ -37,7 +38,7 @@
     <div class="card animate-in" style="animation-delay: 0.15s; margin-bottom: 24px;">
         <div class="card-header">
             <h3 class="card-title">
-                <span>⚡</span>
+                <span>{{ icon('bolt') }}</span>
                 Scan Type
             </h3>
         </div>
@@ -54,7 +55,7 @@
                     text-align: center;
                 " onclick="selectScanType('quick', this)">
                     <input type="radio" name="scan_type" value="quick" style="display: none;">
-                    <div style="font-size: 28px; margin-bottom: 8px;">⚡</div>
+                    <div style="font-size: 28px; margin-bottom: 8px;">{{ icon('bolt') }}</div>
                     <div style="font-weight: 600; margin-bottom: 4px;">Quick</div>
                     <div style="font-size: 12px; color: var(--text-tertiary);">Common ports only</div>
                 </label>
@@ -70,7 +71,7 @@
                     text-align: center;
                 " onclick="selectScanType('full', this)">
                     <input type="radio" name="scan_type" value="full" checked style="display: none;">
-                    <div style="font-size: 28px; margin-bottom: 8px;">🔍</div>
+                    <div style="font-size: 28px; margin-bottom: 8px;">{{ icon('scan') }}</div>
                     <div style="font-weight: 600; margin-bottom: 4px;">Full</div>
                     <div style="font-size: 12px; color: var(--text-tertiary);">All ports + OS</div>
                 </label>
@@ -86,7 +87,7 @@
                     text-align: center;
                 " onclick="selectScanType('stealth', this)">
                     <input type="radio" name="scan_type" value="stealth" style="display: none;">
-                    <div style="font-size: 28px; margin-bottom: 8px;">👻</div>
+                    <div style="font-size: 28px; margin-bottom: 8px;">{{ icon('stealth') }}</div>
                     <div style="font-weight: 600; margin-bottom: 4px;">Stealth</div>
                     <div style="font-size: 12px; color: var(--text-tertiary);">Slow, undetected</div>
                 </label>
@@ -165,7 +166,7 @@
                 <div class="card" style="border-color: var(--accent-green);">
                     <div class="card-body" style="padding: 28px;">
                         <div style="display: flex; align-items: center; gap: 16px;">
-                            <span style="font-size: 40px;">✅</span>
+                            <span style="font-size: 40px; color: var(--accent-green);">${window.icon('check-circle')}</span>
                             <div>
                                 <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Scan Initiated</div>
                                 <div class="text-mono" style="color: var(--accent-blue);">Target: ${data.target}</div>
@@ -190,7 +191,7 @@
             <div class="card" style="border-color: var(--accent-red);">
                 <div class="card-body" style="padding: 28px;">
                     <div style="display: flex; align-items: center; gap: 16px;">
-                        <span style="font-size: 40px;">❌</span>
+                        <span style="font-size: 40px; color: var(--accent-red);">${window.icon('x-circle')}</span>
                         <div>
                             <div style="font-size: 18px; font-weight: 600; color: var(--accent-red); margin-bottom: 4px;">Error</div>
                             <div style="color: var(--text-secondary);">${error.message}</div>
@@ -202,7 +203,7 @@
         }
 
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>🚀</span> Launch Scan';
+        submitBtn.innerHTML = 'Launch Scan';
     }
 </script>
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Subdomain Enumeration - VulnAnalyzer{% endblock %}
 
@@ -12,18 +13,18 @@
     <div class="card animate-in" style="animation-delay: 0.1s; margin-bottom: 24px;">
         <div class="card-header">
             <h3 class="card-title">
-                <span>🎯</span>
+                <span>{{ icon('target') }}</span>
                 Target Domain
             </h3>
         </div>
         <div class="card-body">
             <div style="margin-bottom: 20px;">
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Domain
                 </label>
-                <input type="text" class="form-input" id="target" 
-                       placeholder="example.com"
-                       style="font-size: 16px; padding: 16px;">
+                <input type="text" class="form-input" id="target" placeholder="example.com"
+                    style="font-size: 16px; padding: 16px;">
                 <div style="font-size: 13px; color: var(--text-tertiary); margin-top: 8px;">
                     Enter domain without http:// or https://
                 </div>
@@ -34,29 +35,33 @@
     <div class="card animate-in" style="animation-delay: 0.15s; margin-bottom: 24px;">
         <div class="card-header">
             <h3 class="card-title">
-                <span>📝</span>
+                <span>{{ icon('pencil') }}</span>
                 Wordlist
             </h3>
         </div>
         <div class="card-body">
             <div style="margin-bottom: 16px;">
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Select Wordlist
                 </label>
                 <select class="form-input" id="wordlist" style="font-size: 16px; padding: 16px;">
                     <option value="">Default (medium - 5000 entries)</option>
-                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-2000.txt">Small (2000 entries)</option>
-                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt">Medium (5000 entries)</option>
-                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt">Large (20000 entries)</option>
+                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-2000.txt">Small (2000
+                        entries)</option>
+                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt">Medium (5000
+                        entries)</option>
+                    <option value="/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt">Large (20000
+                        entries)</option>
                 </select>
             </div>
             <div>
-                <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                <label
+                    style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                     Custom Wordlist Path
                 </label>
-                <input type="text" class="form-input" id="custom_wordlist" 
-                       placeholder="/path/to/custom/wordlist.txt"
-                       style="font-size: 14px; padding: 12px;">
+                <input type="text" class="form-input" id="custom_wordlist" placeholder="/path/to/custom/wordlist.txt"
+                    style="font-size: 14px; padding: 12px;">
             </div>
         </div>
     </div>
@@ -64,19 +69,19 @@
     <div class="card animate-in" style="animation-delay: 0.2s; margin-bottom: 24px;">
         <div class="card-header">
             <h3 class="card-title">
-                <span>⚡</span>
+                <span>{{ icon('bolt') }}</span>
                 Options
             </h3>
         </div>
         <div class="card-body">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div>
-                    <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
+                    <label
+                        style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 8px; display: block;">
                         Threads
                     </label>
-                    <input type="number" class="form-input" id="threads" 
-                           value="40" min="1" max="200"
-                           style="font-size: 16px; padding: 12px;">
+                    <input type="number" class="form-input" id="threads" value="40" min="1" max="200"
+                        style="font-size: 16px; padding: 12px;">
                 </div>
                 <div style="display: flex; align-items: center; padding-top: 32px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -88,8 +93,9 @@
         </div>
     </div>
 
-    <button class="btn btn-primary animate-in" style="animation-delay: 0.25s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn" onclick="submitEnumeration()">
-        <span>🚀</span> Start Enumeration
+    <button class="btn btn-primary animate-in"
+        style="animation-delay: 0.25s; width: 100%; padding: 16px; font-size: 16px;" id="submit-btn"
+        onclick="submitEnumeration()"> Start Enumeration
     </button>
 
     <div id="result" style="display: none; margin-top: 24px;"></div>
@@ -98,50 +104,50 @@
 
 {% block extra_js %}
 <script>
-async function submitEnumeration() {
-    let target = document.getElementById('target').value.trim();
-    let wordlist = document.getElementById('wordlist').value;
-    const customWordlist = document.getElementById('custom_wordlist').value.trim();
-    
-    if (customWordlist) {
-        wordlist = customWordlist;
-    }
-    
-    if (!target) {
-        alert('Please enter a target domain');
-        return;
-    }
-    
-    const submitBtn = document.getElementById('submit-btn');
-    const resultDiv = document.getElementById('result');
-    const threads = parseInt(document.getElementById('threads').value) || 40;
-    const useNuclei = document.getElementById('nuclei').checked;
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Running...';
-    resultDiv.style.display = 'none';
-    
-    try {
-        const response = await fetch('/api/enum/subdomain', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                target, 
-                wordlist: wordlist || null,
-                threads,
-                use_nuclei: useNuclei
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
+    async function submitEnumeration() {
+        let target = document.getElementById('target').value.trim();
+        let wordlist = document.getElementById('wordlist').value;
+        const customWordlist = document.getElementById('custom_wordlist').value.trim();
+
+        if (customWordlist) {
+            wordlist = customWordlist;
+        }
+
+        if (!target) {
+            alert('Please enter a target domain');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        const resultDiv = document.getElementById('result');
+        const threads = parseInt(document.getElementById('threads').value) || 40;
+        const useNuclei = document.getElementById('nuclei').checked;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Running...';
+        resultDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/enum/subdomain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target,
+                    wordlist: wordlist || null,
+                    threads,
+                    use_nuclei: useNuclei
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
                 <div class="card" style="border-color: var(--accent-green);">
                     <div class="card-body" style="padding: 28px;">
                         <div style="display: flex; align-items: center; gap: 16px;">
-                            <span style="font-size: 40px;">✅</span>
+                            <span style="font-size: 40px; color: var(--accent-green);">${window.icon('check-circle')}</span>
                             <div>
                                 <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Enumeration Started</div>
                                 <div class="text-mono" style="color: var(--accent-blue);">Target: ${data.target}</div>
@@ -151,18 +157,18 @@ async function submitEnumeration() {
                     </div>
                 </div>
             `;
-            document.getElementById('target').value = '';
-        } else {
-            throw new Error(data.detail || 'Failed to start enumeration');
-        }
-        
-    } catch (error) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
+                document.getElementById('target').value = '';
+            } else {
+                throw new Error(data.detail || 'Failed to start enumeration');
+            }
+
+        } catch (error) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
             <div class="card" style="border-color: var(--accent-red);">
                 <div class="card-body" style="padding: 28px;">
                     <div style="display: flex; align-items: center; gap: 16px;">
-                        <span style="font-size: 40px;">❌</span>
+                        <span style="font-size: 40px; color: var(--accent-red);">${window.icon('x-circle')}</span>
                         <div>
                             <div style="font-size: 18px; font-weight: 600; color: var(--accent-red); margin-bottom: 4px;">Error</div>
                             <div style="color: var(--text-secondary);">${error.message}</div>
@@ -171,16 +177,18 @@ async function submitEnumeration() {
                 </div>
             </div>
         `;
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Start Enumeration';
     }
-    
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span>🚀</span> Start Enumeration';
-}
 </script>
 
 <style>
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 {% endblock %}

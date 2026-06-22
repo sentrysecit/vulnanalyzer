@@ -1,7 +1,6 @@
 import requests
 import time
 import os
-import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -25,7 +24,6 @@ SERVICE_KEYWORDS = {
     "wordpress": ["WordPress"],
     "drupal": ["Drupal"],
     "joomla": ["Joomla"],
-    "nginx": ["Nginx"],
     "iis": ["Microsoft-IIS", "IIS"],
     "vsftpd": ["vsftpd"],
     "proftpd": ["ProFTPD"],
