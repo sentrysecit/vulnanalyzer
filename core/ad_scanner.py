@@ -23,6 +23,12 @@ COMMON_CREDENTIALS = [
 
 
 class ADScanner:
+    """
+    Scanner para detectar vulnerabilidades en Active Directory.
+
+    Identifica Domain Controllers, busca CVEs conocidas y enumera shares.
+    """
+
     def __init__(self, target: str, credentials: List[tuple] = None):
         self.target = target
         self.credentials = credentials or COMMON_CREDENTIALS

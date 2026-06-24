@@ -1,6 +1,6 @@
 argparse
 requests
-python-nmap
+python-nmap>=0.0.1
 python-dotenv
 beautifulsoup4
 Jinja2==3.1.6
