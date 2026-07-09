@@ -241,7 +241,7 @@ class VulnerabilityResponse(BaseModel):
     cve_id: Optional[str] = None
     title: Optional[str] = None
     severity: Optional[str] = None
-    cvss_score: Optional[str] = None
+    cvss_score: Optional[float] = None
     is_exploited: bool = False
     exploit_available: bool = False
     edb_id: Optional[str] = None

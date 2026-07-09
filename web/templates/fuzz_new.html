@@ -164,8 +164,8 @@
                             <span style="font-size: 40px; color: var(--accent-green);">${window.icon('check-circle')}</span>
                             <div>
                                 <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Fuzzing Started</div>
-                                <div class="text-mono" style="color: var(--accent-blue);">Target: ${data.target}</div>
-                                <div class="text-mono" style="color: var(--text-secondary); font-size: 13px;">ID: ${data.id}</div>
+                                <div class="text-mono" style="color: var(--accent-blue);">Target: ${window.escapeHtml(data.target)}</div>
+                                <div class="text-mono" style="color: var(--text-secondary); font-size: 13px;">ID: ${window.escapeHtml(data.id)}</div>
                             </div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@
                         <span style="font-size: 40px; color: var(--accent-red);">${window.icon('x-circle')}</span>
                         <div>
                             <div style="font-size: 18px; font-weight: 600; color: var(--accent-red); margin-bottom: 4px;">Error</div>
-                            <div style="color: var(--text-secondary);">${error.message}</div>
+                            <div style="color: var(--text-secondary);">${window.escapeHtml(error.message)}</div>
                         </div>
                     </div>
                 </div>

@@ -825,6 +825,12 @@
             var paths = window.ICON_PATHS[name] || '';
             return '<svg class="icon' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' + paths + '</svg>';
         };
+        window.escapeHtml = function (text) {
+            if (text === null || text === undefined) return '';
+            var div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        };
     </script>
     {% block extra_js %}{% endblock %}
 </body>

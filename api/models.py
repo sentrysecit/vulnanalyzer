@@ -6,6 +6,7 @@ from sqlalchemy import (
     Text,
     Boolean,
     ForeignKey,
+    Float,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -136,7 +137,7 @@ class Vulnerability(Base):
     cve_id = Column(String(20), nullable=True, index=True)
     title = Column(String(255), nullable=True)
     severity = Column(String(20), nullable=True)
-    cvss_score = Column(String(10), nullable=True)
+    cvss_score = Column(Float, nullable=True)
     is_exploited = Column(Boolean, default=False)
     exploit_available = Column(Boolean, default=False)
     edb_id = Column(String(20), nullable=True)

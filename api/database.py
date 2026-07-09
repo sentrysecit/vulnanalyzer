@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
@@ -29,7 +29,22 @@ def get_db():
         db.close()
 
 
+def _migrate_cvss_scores():
+    inspector = inspect(engine)
+    if "vulnerabilities" not in inspector.get_table_names():
+        return
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE vulnerabilities SET cvss_score = CAST(cvss_score AS REAL) "
+                "WHERE cvss_score IS NOT NULL AND cvss_score != ''"
+            )
+        )
+
+
 def init_db():
     from api.models import Scan, SubdomainEnum, SubdomainResult, PathFuzz, PathResult, Vulnerability  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _migrate_cvss_scores()

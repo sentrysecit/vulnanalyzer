@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from typing import List
 import threading
 
@@ -61,11 +61,13 @@ def get_host_vulnerabilities(
 @router.get("/stats", response_model=VulnerabilityStatsResponse)
 def get_vulnerability_stats(db: Session = Depends(get_db)):
     total = db.query(Vulnerability).count()
-    critical = db.query(Vulnerability).filter(Vulnerability.cvss_score >= 9.0).count()
+    critical = (
+        db.query(Vulnerability).filter(Vulnerability.cvss_score >= 9.0).count()
+    )
     high = (
         db.query(Vulnerability)
         .filter(
-            func.cast(Vulnerability.cvss_score, type_=float) >= 7.0,
+            Vulnerability.cvss_score >= 7.0,
             Vulnerability.cvss_score < 9.0,
         )
         .count()
@@ -73,7 +75,7 @@ def get_vulnerability_stats(db: Session = Depends(get_db)):
     medium = (
         db.query(Vulnerability)
         .filter(
-            func.cast(Vulnerability.cvss_score, type_=float) >= 4.0,
+            Vulnerability.cvss_score >= 4.0,
             Vulnerability.cvss_score < 7.0,
         )
         .count()
@@ -81,7 +83,7 @@ def get_vulnerability_stats(db: Session = Depends(get_db)):
     low = (
         db.query(Vulnerability)
         .filter(
-            func.cast(Vulnerability.cvss_score, type_=float) < 4.0,
+            Vulnerability.cvss_score < 4.0,
             Vulnerability.cvss_score > 0,
         )
         .count()
@@ -269,8 +271,8 @@ def check_scan_vulnerabilities(scan_id: int, db: Session = Depends(get_db)):
                         version=vuln.get("version"),
                         cve_id=vuln.get("cve_id"),
                         severity=vuln.get("severity"),
-                        cvss_score=str(vuln.get("cvss_score"))
-                        if vuln.get("cvss_score")
+                        cvss_score=float(vuln["cvss_score"])
+                        if vuln.get("cvss_score") is not None
                         else None,
                         is_exploited=vuln.get("is_exploited", False),
                         host_os=host_os_map.get(host),

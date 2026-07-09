@@ -111,7 +111,9 @@ def run_ffuf_path(
 
     cmd.extend(["-of", "csv", "-o", "ffuf_paths.csv"])
 
-    subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[!] ffuf error: {result.stderr}")
 
     found = []
 

@@ -25,8 +25,12 @@ router = APIRouter(prefix="/api/enum", tags=["enumeration"])
 
 
 def get_output_dir():
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_dir, "tools", "fuzzing")
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+    output_dir = os.path.join(project_root, "tools", "fuzzing")
+    os.makedirs(output_dir, exist_ok=True)
+    return output_dir
 
 
 @router.get("/wordlists", response_model=List[WordlistResponse])
