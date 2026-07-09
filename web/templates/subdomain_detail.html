@@ -4,7 +4,7 @@
 {% block title %}Subdomain Details - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<div class="animate-in">
+<div class="animate-in" data-enum-id="{{ enum_id }}">
     <h1 class="page-title">Subdomain Enumeration</h1>
     <p class="page-subtitle">Details for enumeration #{{ enum_id }}</p>
 </div>
@@ -70,8 +70,7 @@
             </thead>
             <tbody id="results-list">
                 <tr>
-                    <td colspan="2" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
-                        Loading...
+                    <td colspan="2" style="padding: 40px; text-align: center; color: var(--text-tertiary);">Loading...
                     </td>
                 </tr>
             </tbody>
@@ -82,67 +81,67 @@
 
 {% block extra_js %}
 <script>
-function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     async function loadDetail() {
-        const enumId = {{ enum_id }
-    };
+        const enumId = parseInt(document.querySelector('[data-enum-id]').dataset.enumId, 10);
 
-    try {
-        const response = await fetch(`/api/enum/subdomain/${enumId}`);
-        const data = await response.json();
+        try {
+            const response = await fetch('/api/enum/subdomain/' + enumId);
+            const data = await response.json();
 
-        document.getElementById('total-count').textContent = data.total_found || 0;
-        document.getElementById('alive-count').textContent = data.alive_count || 0;
-        document.getElementById('dead-count').textContent = (data.total_found - data.alive_count) || 0;
+            document.getElementById('total-count').textContent = data.total_found || 0;
+            document.getElementById('alive-count').textContent = data.alive_count || 0;
+            document.getElementById('dead-count').textContent = (data.total_found - data.alive_count) || 0;
 
-        const statusBadge = document.getElementById('status-badge');
-        statusBadge.textContent = data.status;
-        statusBadge.dataset.status = data.status;
-
-    } catch (error) {
-        console.error('Error loading detail:', error);
-    }
-
-    try {
-        const response = await fetch(`/api/enum/subdomain/${enumId}/results`);
-        const results = await response.json();
-
-        const tbody = document.getElementById('results-list');
-
-        if (results.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="2" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
-                        No subdomains found
-                    </td>
-                </tr>
-            `;
-            return;
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.textContent = data.status;
+            statusBadge.dataset.status = data.status;
+            statusBadge.style.padding = '4px 12px';
+            statusBadge.style.borderRadius = '20px';
+            statusBadge.style.fontSize = '12px';
+            statusBadge.style.fontWeight = '500';
+            if (data.status === 'completed') {
+                statusBadge.style.background = 'var(--accent-green-light)';
+                statusBadge.style.color = 'var(--accent-green)';
+            } else if (data.status === 'running') {
+                statusBadge.style.background = 'var(--accent-blue-light)';
+                statusBadge.style.color = 'var(--accent-blue)';
+            } else if (data.status === 'failed') {
+                statusBadge.style.background = 'var(--accent-red-light)';
+                statusBadge.style.color = 'var(--accent-red)';
+            }
+        } catch (error) {
+            console.error('Error loading detail:', error);
         }
 
-        tbody.innerHTML = results.map(r => `
-            <tr style="border-top: 1px solid var(--border-light);">
-                <td style="padding: 16px;">
-                    <span class="text-mono" style="color: var(--accent-blue);">${escapeHtml(r.subdomain)}</span>
-                </td>
-                <td style="padding: 16px; text-align: center;">
-                    <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; ${r.is_alive
-                ? 'background: var(--accent-green-light); color: var(--accent-green);'
-                : 'background: var(--accent-red-light); color: var(--accent-red);'
-            }">
-                        ${r.is_alive ? 'Alive' : 'Down'}
-                    </span>
-                </td>
-            </tr>
-        `).join('');
+        try {
+            const response = await fetch('/api/enum/subdomain/' + enumId + '/results');
+            const results = await response.json();
 
-    } catch (error) {
-        console.error('Error loading results:', error);
+            const tbody = document.getElementById('results-list');
+
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="padding: 40px; text-align: center; color: var(--text-tertiary);">No subdomains found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = results.map(function (r) {
+                var aliveStyle = r.is_alive
+                    ? 'background: var(--accent-green-light); color: var(--accent-green);'
+                    : 'background: var(--accent-red-light); color: var(--accent-red);';
+                return '<tr style="border-top: 1px solid var(--border-light);">'
+                    + '<td style="padding: 16px;"><span class="text-mono" style="color: var(--accent-blue);">' + escapeHtml(r.subdomain) + '</span></td>'
+                    + '<td style="padding: 16px; text-align: center;"><span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; ' + aliveStyle + '">'
+                    + (r.is_alive ? 'Alive' : 'Down')
+                    + '</span></td></tr>';
+            }).join('');
+        } catch (error) {
+            console.error('Error loading results:', error);
+        }
     }
-}
 
     loadDetail();
 </script>
