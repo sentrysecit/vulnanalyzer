@@ -1,0 +1,49 @@
+# Tooling configuration for VulnAnalyzer.
+# Shared by local runs and the GitHub Actions CI workflow (.github/workflows/ci.yml).
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+extend-exclude = ["venv", "tools", ".pytest_cache"]
+
+[tool.ruff.lint]
+# Ruff's default rules (pyflakes F + a subset of pycodestyle E). These pass on
+# the current codebase, so CI starts green.
+#
+# To adopt stricter rules (import sorting, pyupgrade, bugbear), add
+#   select = ["E", "F", "W", "I", "UP", "B"]
+# and run `ruff check --fix` once to apply the ~180 mechanical fixes, then commit
+# that reformat on its own branch.
+ignore = [
+    "B008",  # FastAPI uses `Depends(...)` as a default argument by design
+]
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+explicit_package_bases = true
+exclude = "^(venv|tools|reports)/"
+# The codebase is largely untyped and uses SQLAlchemy 2.x (whose Column
+# attributes produce false positives without the removed mypy plugin), so mypy
+# runs as an informational (non-blocking) step in CI. Do not enable strict mode
+# until the code is annotated.
+warn_unused_ignores = false
+warn_redundant_casts = true
+
+[tool.bandit]
+exclude_dirs = ["venv", "tools", "tests", ".pytest_cache"]
+# Skips for patterns that are inherent to a security/pentest tool and are not
+# defects here. Real issues (hardcoded secrets B105-B107, SQLi B608, eval B307,
+# exec B102, unsafe yaml/pickle, jinja autoescape B701, ...) remain enforced.
+skips = [
+    "B104",  # bind to 0.0.0.0 — the web server is meant to be reachable
+    "B108",  # hardcoded /tmp — report temp files, low risk
+    "B110",  # try/except/pass
+    "B112",  # try/except/continue
+    "B113",  # request without timeout (tracked separately, see review notes)
+    "B311",  # non-crypto random
+    "B404",  # importing subprocess — required to drive external scanners
+    "B501",  # requests verify=False — scanning targets with untrusted certs
+    "B603",  # subprocess call — arguments are lists, not shell strings
+    "B607",  # partial executable path for external security tools
+]

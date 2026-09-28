@@ -220,6 +220,23 @@ python main.py web
 - [Web Interface & API Guide](./docs/02_web_interface.md) - Web UI and REST API documentation
 - [Vulnerability Database Guide](./docs/03_vulnerability_database.md) - CVE scanning, exploit finding, and vulnerability management
 
+## Development
+
+Static-analysis tooling is configured in `pyproject.toml` and runs automatically
+on every push and pull request to `main`/`dev` via GitHub Actions
+(`.github/workflows/ci.yml`).
+
+```bash
+ruff check .                        # Lint (enforced in CI)
+bandit -c pyproject.toml -r . -q    # Security scan (enforced in CI)
+mypy .                              # Type check (informational)
+```
+
+Bandit is tuned for a security tool: patterns inherent to the tool's purpose
+(spawning external scanners, `verify=False`, binding to all interfaces) are
+skipped, while genuine issues (hardcoded secrets, SQL injection, `eval`/`exec`,
+Jinja2 autoescape) remain enforced.
+
 ## Useful Links
 
 - [Caldera Documentation](https://caldera.readthedocs.io/)
