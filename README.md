@@ -10,6 +10,8 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates MITRE Ca
 ## Features
 
 - **Vulnerability Scanning** - Automated scanning with Nmap (quick, full, stealth modes)
+- **OS Fingerprinting** - Detect target operating system family, name, and accuracy during scans
+- **Active Directory Assessment** - Detect Domain Controllers and check for AD-specific vulnerabilities (ZeroLogon, PetitPotam, DFSCoerce, NoPAC, LDAP signing, SMB shares)
 - **CVE Detection** - Automatic CVE lookup via NVD API and CISA Known Exploited Vulnerabilities (KEV) catalog
 - **Exploit Finding** - Search for available exploits via searchsploit and pyexploitdb
 - **Vulnerability Database** - Full CRUD for vulnerabilities with per-scan, per-host, and per-enum querying
@@ -18,12 +20,13 @@ VulnAnalyzer Framework is a vulnerability analysis tool that integrates MITRE Ca
 - **Host Discovery** - Network host discovery via Nmap
 - **Exploit Execution** - Run exploits against detected vulnerabilities
 - **MITRE Caldera Integration** - Adversary emulation and agent deployment
-- **Report Generation** - Detailed reports in HTML, JSON, and PDF formats
+- **Report Generation** - Detailed reports in HTML, JSON, Markdown, and PDF formats
 - **Web Interface** - Dashboard, scan management, report viewer, and enumeration UI
 - **REST API** - Full API for integration with other tools and automation
 - **SQLite Database** - Persistent storage for scans, vulnerabilities, and enumeration results
 - **Web Vulnerability Scanning** - Security header checking on web targets
 - **Docker Support** - Docker Compose for Caldera and optional OpenVAS
+- **Input Validation** - Strict hostname/URL validation on enumeration endpoints to prevent command injection
 
 ## Installation
 
@@ -70,6 +73,7 @@ chmod +x setup.sh
 ```
 
 What the script does:
+
 1. Checks for `pip`, `git`, and `docker` commands
 2. Verifies Docker daemon is running
 3. Installs `requirements.txt`
@@ -131,14 +135,14 @@ OUTPUT_DIR=./reports
 docker exec -it caldera-server /bin/bash
 ```
 
-2. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
+1. Retrieve the login credentials (Caldera generates a new API key and password at each startup):
 
 ```bash
 cat conf/local.yml
 ```
 
-3. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
-4. Copy the API key into the `.env` file.
+1. Use the startup credentials depending on whether you want to work with the `red` or `blue` agent.
+2. Copy the API key into the `.env` file.
 
 ## Project Structure
 
@@ -152,11 +156,12 @@ vulnanalyzer/
 │   │   └── vulns.py            # Vulnerability & CVE endpoints
 │   ├── tools/                  # Tool assets (wordlists, fuzzing output)
 │   ├── models.py               # SQLAlchemy models (6 tables)
-│   ├── schemas.py              # Pydantic schemas (21 schemas)
+│   ├── schemas.py              # Pydantic schemas (22 schemas)
 │   ├── database.py             # SQLite connection
 │   └── main.py                 # FastAPI app + web routes
 ├── core/                       # Core functionality
-│   ├── scanner.py              # Vulnerability scanner (nmap + CVE + exploits)
+│   ├── scanner.py              # Vulnerability scanner (nmap + CVE + exploits + OS/AD)
+│   ├── ad_scanner.py           # Active Directory vulnerability checks
 │   ├── cve_scanner.py          # CVE lookup (NVD API, CISA KEV, local cache)
 │   ├── exploit_finder.py       # Exploit search (searchsploit, pyexploitdb)
 │   ├── discover.py             # Host discovery
@@ -214,6 +219,23 @@ python main.py web
 - [CLI Usage Guide](./docs/01_usage.md) - Complete CLI command reference
 - [Web Interface & API Guide](./docs/02_web_interface.md) - Web UI and REST API documentation
 - [Vulnerability Database Guide](./docs/03_vulnerability_database.md) - CVE scanning, exploit finding, and vulnerability management
+
+## Development
+
+Static-analysis tooling is configured in `pyproject.toml` and runs automatically
+on every push and pull request to `main`/`dev` via GitHub Actions
+(`.github/workflows/ci.yml`).
+
+```bash
+ruff check .                        # Lint (enforced in CI)
+bandit -c pyproject.toml -r . -q    # Security scan (enforced in CI)
+mypy .                              # Type check (informational)
+```
+
+Bandit is tuned for a security tool: patterns inherent to the tool's purpose
+(spawning external scanners, `verify=False`, binding to all interfaces) are
+skipped, while genuine issues (hardcoded secrets, SQL injection, `eval`/`exec`,
+Jinja2 autoescape) remain enforced.
 
 ## Useful Links
 

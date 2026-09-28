@@ -197,6 +197,8 @@ python main.py subdomain <domain> [options]
 python main.py subdomain example.com
 ```
 
+> **Note:** The target must be a valid hostname or IP address (e.g., `example.com`, `192.168.1.10`). URLs with schemes (`http://`) are accepted and stripped automatically. Shell metacharacters are rejected.
+
 **Options:**
 
 | Option | Description | Default |
@@ -236,6 +238,8 @@ python main.py fuzz <url> [options]
 ```bash
 python main.py fuzz http://example.com
 ```
+
+> **Note:** The target must be a valid URL with an `http://` or `https://` scheme and a resolvable hostname or IP address. Malformed URLs or hosts containing shell metacharacters are rejected.
 
 **Options:**
 

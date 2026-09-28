@@ -12,3 +12,4 @@ sqlalchemy
 pydantic
 ruff==0.15.15
 bandit==1.9.4
+mypy==2.2.0

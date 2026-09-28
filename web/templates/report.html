@@ -15,6 +15,9 @@
         <button onclick="window.print()" class="btn btn-secondary">
             <span>{{ icon('printer') }}</span> Print
         </button>
+        <a href="/api/reports/{{ scan_id }}/download/pdf" class="btn btn-primary">
+            <span>{{ icon('download') }}</span> PDF
+        </a>
         <a href="/api/reports/{{ scan_id }}/download/json" class="btn btn-secondary">
             <span>{{ icon('download') }}</span> JSON
         </a>

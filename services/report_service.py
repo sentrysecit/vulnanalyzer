@@ -1,6 +1,6 @@
 import datetime
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 class ReportService:
@@ -8,7 +8,10 @@ class ReportService:
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         template_dir = os.path.join(base_dir, "web", "templates")
-        self.env = Environment(loader=FileSystemLoader(template_dir))
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
 
     def generate_summary(self, data: dict) -> dict:
         summary = {
@@ -89,6 +92,312 @@ class ReportService:
             ctx.update(context)
 
         return template.render(**ctx)
+
+    # ------------------------------------------------------------------
+    # Professional pentest report (HTML + PDF)
+    # ------------------------------------------------------------------
+    SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+
+    _IMPACT_BY_SEVERITY = {
+        "critical": (
+            "Successful exploitation could lead to full compromise of the affected "
+            "asset (e.g. remote code execution, privilege escalation or data breach) "
+            "with severe impact on confidentiality, integrity and availability."
+        ),
+        "high": (
+            "Exploitation could allow an attacker to gain significant unauthorised "
+            "access or disrupt the affected service, materially impacting the security "
+            "of the environment."
+        ),
+        "medium": (
+            "Exploitation may expose sensitive information or provide an attacker with "
+            "a foothold that can be chained with other weaknesses."
+        ),
+        "low": (
+            "Limited direct impact, but the weakness reduces the overall security "
+            "posture and may aid an attacker during reconnaissance."
+        ),
+        "info": (
+            "Informational finding with no direct security impact; included for "
+            "completeness and situational awareness."
+        ),
+    }
+
+    def _norm_severity(self, sev: str) -> str:
+        sev = (sev or "info").lower()
+        return sev if sev in self.SEVERITY_ORDER else "info"
+
+    @staticmethod
+    def _short_desc(text: str, limit: int = 600) -> str:
+        """Clamp verbose CVE descriptions for the report. NVD text (especially
+        Linux kernel CVEs) can run to thousands of characters including console
+        traces; keep the first paragraph up to `limit` chars."""
+        text = (text or "").strip()
+        if not text:
+            return ""
+        para = text.split("\n\n", 1)[0].strip() or text
+        if len(para) > limit:
+            para = para[:limit].rsplit(" ", 1)[0].rstrip() + "…"
+        return para
+
+    @staticmethod
+    def _clean_title(title: str, cve_id: str = "", limit: int = 90) -> str:
+        """A finding title should be a short label, not a dumped description.
+        Fall back to the CVE id (or a clamp) when it is too long."""
+        title = (title or "").strip().splitlines()[0] if title else ""
+        # A title ending in ':' is a description lead-in (e.g. the Linux-kernel
+        # CVE boilerplate), not a label — prefer the CVE id when available.
+        if cve_id and (len(title) > limit or title.rstrip().endswith(":")):
+            return cve_id
+        if len(title) > limit:
+            return title[: limit - 1].rstrip() + "…"
+        return title or cve_id or "Unknown"
+
+    def _build_findings(self, scan_results: dict) -> list:
+        """Flatten per-host vulnerabilities into deduplicated findings.
+
+        Findings are keyed by CVE (or title/name when no CVE is available), so the
+        same issue affecting several hosts becomes a single finding listing all
+        affected assets. Severity is escalated to the worst observed value.
+        """
+        findings: dict = {}
+        order: list = []
+
+        def add(key, *, severity, title, asset, cve_id="", cvss="",
+                description="", remediation="", is_exploited=False):
+            if not key:
+                return
+            sev = self._norm_severity(severity)
+            if key not in findings:
+                findings[key] = {
+                    "title": title or key,
+                    "severity": sev,
+                    "cve_id": cve_id or "",
+                    "cvss": cvss or "",
+                    "description": description or "",
+                    "remediation": remediation or "",
+                    "is_exploited": bool(is_exploited),
+                    "affected": [],
+                }
+                order.append(key)
+            f = findings[key]
+            if self.SEVERITY_ORDER[sev] < self.SEVERITY_ORDER[f["severity"]]:
+                f["severity"] = sev
+            if cvss and not f["cvss"]:
+                f["cvss"] = cvss
+            if cve_id and not f["cve_id"]:
+                f["cve_id"] = cve_id
+            if description and not f["description"]:
+                f["description"] = description
+            if remediation and not f["remediation"]:
+                f["remediation"] = remediation
+            if is_exploited:
+                f["is_exploited"] = True
+            if asset:
+                # De-duplicate affected assets across data sources. The same AD
+                # vulnerability arrives both as a host vuln (service "Active
+                # Directory") and from the "ad" block (labelled "AD"); normalise
+                # so one host is not listed twice under different labels.
+                norm = asset.lower().replace("(active directory)", "(ad)")
+                seen = f.setdefault("_affected_norm", set())
+                if norm not in seen:
+                    seen.add(norm)
+                    f["affected"].append(asset)
+
+        for host, host_data in scan_results.items():
+            if not isinstance(host_data, dict):
+                continue
+
+            for vuln in host_data.get("vulnerabilities", []) or []:
+                cve_id = vuln.get("cve_id", "")
+                title = cve_id or vuln.get("title") or vuln.get("type") or "Unknown"
+                port = vuln.get("port")
+                svc = vuln.get("service", "")
+                asset = host + (f":{port}" if port else "") + (f" ({svc})" if svc else "")
+                add(
+                    cve_id or title,
+                    severity=vuln.get("severity"),
+                    title=vuln.get("title") or cve_id or title,
+                    asset=asset,
+                    cve_id=cve_id,
+                    cvss=vuln.get("cvss_score", ""),
+                    description=vuln.get("description", ""),
+                    remediation=vuln.get("recommendation", ""),
+                    is_exploited=vuln.get("is_exploited", False),
+                )
+
+            web = host_data.get("web_vulnerabilities", {})
+            if isinstance(web, dict):
+                for wv in web.get("vulnerabilities", []) or []:
+                    name = wv.get("name") or wv.get("type") or "Web Vulnerability"
+                    add(
+                        f"web:{name}",
+                        severity=wv.get("severity"),
+                        title=name,
+                        asset=f"{host} (web)",
+                        description=wv.get("description", ""),
+                        remediation=wv.get("recommendation", ""),
+                    )
+
+            ad = host_data.get("ad", {})
+            if isinstance(ad, dict):
+                for adv in ad.get("vulnerabilities", []) or []:
+                    cve = adv.get("cve", "")
+                    name = adv.get("name") or cve or "AD Vulnerability"
+                    add(
+                        cve or f"ad:{name}",
+                        severity=adv.get("severity"),
+                        title=name,
+                        asset=f"{host} (AD)",
+                        cve_id=cve,
+                        description=adv.get("description", ""),
+                        remediation=adv.get("recommendation", ""),
+                    )
+
+        ordered = sorted(
+            (findings[k] for k in order),
+            key=lambda f: (self.SEVERITY_ORDER[f["severity"]], f["title"]),
+        )
+
+        for idx, f in enumerate(ordered, start=1):
+            f.pop("_affected_norm", None)
+            f["id"] = f"F-{idx:03d}"
+            f["title"] = self._clean_title(f["title"], f["cve_id"])
+            f["description"] = self._short_desc(f["description"])
+            f["impact"] = self._IMPACT_BY_SEVERITY[f["severity"]]
+            if not f["remediation"]:
+                f["remediation"] = (
+                    "Apply the latest vendor-supplied patches or mitigations for the "
+                    "affected component and validate the fix."
+                )
+            refs = []
+            if f["cve_id"]:
+                refs.append(f"https://nvd.nist.gov/vuln/detail/{f['cve_id']}")
+            if f["is_exploited"]:
+                refs.append(
+                    "CISA KEV — "
+                    "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+                )
+            f["references"] = refs
+            n = len(f["affected"])
+            f["affected_short"] = (
+                f["affected"][0] + (f" (+{n - 1} more)" if n > 1 else "")
+                if f["affected"]
+                else "—"
+            )
+
+        return ordered
+
+    def _build_host_inventory(self, scan_results: dict) -> list:
+        hosts = []
+        for host, host_data in scan_results.items():
+            if not isinstance(host_data, dict):
+                continue
+            os_name = host_data.get("os_name")
+            os_family = host_data.get("os_family")
+            if os_name and os_family and os_family.lower() in os_name.lower():
+                os_str = os_name
+            else:
+                os_str = " ".join(p for p in [os_family, os_name] if p)
+            ports = []
+            for port, pdata in (host_data.get("ports", {}) or {}).items():
+                if not isinstance(pdata, dict):
+                    continue
+                ports.append(
+                    {
+                        "port": port,
+                        "service": pdata.get("service", ""),
+                        "version": pdata.get("version", ""),
+                    }
+                )
+            hosts.append(
+                {
+                    "name": host,
+                    "status": host_data.get("status", "unknown"),
+                    "os": os_str,
+                    "ports": ports,
+                    "vuln_count": len(host_data.get("vulnerabilities", []) or []),
+                }
+            )
+        return hosts
+
+    @staticmethod
+    def _risk_rating(severity_counts: dict) -> str:
+        if severity_counts.get("critical"):
+            return "Critical"
+        if severity_counts.get("high"):
+            return "High"
+        if severity_counts.get("medium"):
+            return "Medium"
+        if severity_counts.get("low"):
+            return "Low"
+        return "Informational"
+
+    def build_report_context(
+        self, data: dict, scan=None, title: str = "Penetration Test Report"
+    ) -> dict:
+        scan_results = data.get("scan_results") or {}
+        findings = self._build_findings(scan_results)
+
+        severity_counts = {k: 0 for k in self.SEVERITY_ORDER}
+        for f in findings:
+            severity_counts[f["severity"]] += 1
+
+        summary = {
+            "total_vulnerabilities": len(findings),
+            "total_hosts": len(scan_results),
+            "severity_counts": severity_counts,
+            "kev_count": sum(1 for f in findings if f["is_exploited"]),
+            "risk_rating": self._risk_rating(severity_counts),
+        }
+
+        date_str = "N/A"
+        target = ""
+        scan_type = "full"
+        status = "completed"
+        if scan is not None:
+            target = getattr(scan, "target", "") or ""
+            scan_type = getattr(scan, "scan_type", "full") or "full"
+            status = getattr(scan, "status", "completed") or "completed"
+            created = getattr(scan, "created_at", None)
+            if created:
+                date_str = created.strftime("%Y-%m-%d %H:%M")
+        target = target or data.get("target", "N/A")
+
+        meta = {
+            "title": title,
+            "target": target,
+            "scan_type": scan_type,
+            "status": status,
+            "date": date_str,
+            "generated": self.timestamp,
+            "classification": "CONFIDENTIAL",
+        }
+
+        return {
+            "title": title,
+            "meta": meta,
+            "summary": summary,
+            "findings": findings,
+            "hosts": self._build_host_inventory(scan_results),
+        }
+
+    def generate_pentest_html(
+        self, data: dict, scan=None, title: str = "Penetration Test Report"
+    ) -> str:
+        template = self.env.get_template("reports/pentest_report.html")
+        return template.render(**self.build_report_context(data, scan, title))
+
+    def generate_pdf(
+        self, data: dict, scan=None, title: str = "Penetration Test Report"
+    ) -> bytes:
+        import weasyprint
+
+        html = self.generate_pentest_html(data, scan, title)
+        # The template is self-contained; refuse every non-data: URL so injected
+        # CSS/HTML from scan data cannot trigger SSRF or read local files.
+        url_fetcher = weasyprint.URLFetcher(allowed_protocols=["data"])
+        return weasyprint.HTML(string=html, url_fetcher=url_fetcher).write_pdf()
 
     def generate_markdown_from_data(
         self, data: dict, scan=None, title: str = "Vulnerability Report"

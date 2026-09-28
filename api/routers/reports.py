@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 from datetime import datetime
 import tempfile
@@ -89,9 +89,12 @@ def get_report_preview(scan_id: int, db: Session = Depends(get_db)):
     summary = report_service.generate_summary(scan.results or {})
 
     template_path = get_report_template_path()
-    from jinja2 import Environment, FileSystemLoader
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-    env = Environment(loader=FileSystemLoader(template_path))
+    env = Environment(
+        loader=FileSystemLoader(template_path),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
     template = env.get_template("reports/view.html")
 
     html_content = template.render(
@@ -105,9 +108,10 @@ def get_report_preview(scan_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{scan_id}/download/{format}")
 def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
-    if format not in ["html", "json", "markdown"]:
+    if format not in ["html", "json", "markdown", "pdf"]:
         raise HTTPException(
-            status_code=400, detail="Invalid format. Use 'html', 'json' or 'markdown'"
+            status_code=400,
+            detail="Invalid format. Use 'html', 'pdf', 'json' or 'markdown'",
         )
 
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
@@ -133,6 +137,23 @@ def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
         },
         "results": scan.results,
     }
+
+    if format == "pdf":
+        report_service = get_report_service()
+        pdf_bytes = report_service.generate_pdf(
+            data={"scan_results": scan.results or {}},
+            scan=scan,
+            title=f"Penetration Test Report - {scan.target}",
+        )
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="scan_{scan_id}_report.pdf"'
+                )
+            },
+        )
 
     if format == "markdown":
         report_service = get_report_service()
@@ -166,10 +187,10 @@ def download_report(scan_id: int, format: str, db: Session = Depends(get_db)):
         )
 
     report_service = get_report_service()
-    html_content = report_service.generate_html_from_data(
-        data={"scan_results": scan.results},
-        title=f"Vulnerability Report - {scan.target}",
-        context={"scan": scan},
+    html_content = report_service.generate_pentest_html(
+        data={"scan_results": scan.results or {}},
+        scan=scan,
+        title=f"Penetration Test Report - {scan.target}",
     )
 
     return HTMLResponse(content=html_content)

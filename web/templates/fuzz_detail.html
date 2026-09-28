@@ -4,7 +4,7 @@
 {% block title %}Fuzzing Details - VulnAnalyzer{% endblock %}
 
 {% block content %}
-<div class="animate-in">
+<div class="animate-in" data-fuzz-id="{{ fuzz_id }}">
     <h1 class="page-title">Path Fuzzing</h1>
     <p class="page-subtitle">Details for fuzzing job #{{ fuzz_id }}</p>
 </div>
@@ -19,21 +19,25 @@
     <div class="card animate-in" style="animation-delay: 0.1s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div style="font-size: 32px; font-weight: 700; color: var(--accent-blue);" id="total-count">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Paths Found</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Paths
+                Found</div>
         </div>
     </div>
-    
+
     <div class="card animate-in" style="animation-delay: 0.15s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--accent-blue); word-break: break-all;" id="target-url">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Target</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--accent-blue); word-break: break-all;"
+                id="target-url">-</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">
+                Target</div>
         </div>
     </div>
-    
+
     <div class="card animate-in" style="animation-delay: 0.2s;">
         <div class="card-body" style="text-align: center; padding: 24px;">
             <div class="status-badge" id="status-badge" data-status="">-</div>
-            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">Status</div>
+            <div style="font-size: 13px; color: var(--text-tertiary); text-transform: uppercase; margin-top: 8px;">
+                Status</div>
         </div>
     </div>
 </div>
@@ -49,14 +53,14 @@
         <table style="width: 100%; border-collapse: collapse;">
             <thead style="position: sticky; top: 0; background: var(--bg-card);">
                 <tr>
-                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">Path</th>
+                    <th
+                        style="padding: 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary);">
+                        Path</th>
                 </tr>
             </thead>
             <tbody id="results-list">
                 <tr>
-                    <td colspan="1" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
-                        Loading...
-                    </td>
+                    <td style="padding: 40px; text-align: center; color: var(--text-tertiary);">Loading...</td>
                 </tr>
             </tbody>
         </table>
@@ -66,58 +70,62 @@
 
 {% block extra_js %}
 <script>
-function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-async function loadDetail() {
-    const fuzzId = {{ fuzz_id }};
-    
-    try {
-        const response = await fetch(`/api/enum/fuzz/${fuzzId}`);
-        const data = await response.json();
-        
-        document.getElementById('total-count').textContent = data.total_found || 0;
-        document.getElementById('target-url').textContent = data.target || '-';
-        
-        const statusBadge = document.getElementById('status-badge');
-        statusBadge.textContent = data.status;
-        statusBadge.dataset.status = data.status;
-        
-    } catch (error) {
-        console.error('Error loading detail:', error);
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-    
-    try {
-        const response = await fetch(`/api/enum/fuzz/${fuzzId}/results`);
-        const results = await response.json();
-        
-        const tbody = document.getElementById('results-list');
-        
-        if (results.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="1" style="padding: 40px; text-align: center; color: var(--text-tertiary);">
-                        No paths found
-                    </td>
-                </tr>
-            `;
-            return;
+
+    async function loadDetail() {
+        var fuzzId = parseInt(document.querySelector('[data-fuzz-id]').dataset.fuzzId, 10);
+
+        try {
+            var response = await fetch('/api/enum/fuzz/' + fuzzId);
+            var data = await response.json();
+
+            document.getElementById('total-count').textContent = data.total_found || 0;
+            document.getElementById('target-url').textContent = data.target || '-';
+
+            var statusBadge = document.getElementById('status-badge');
+            statusBadge.textContent = data.status;
+            statusBadge.dataset.status = data.status;
+            statusBadge.style.padding = '4px 12px';
+            statusBadge.style.borderRadius = '20px';
+            statusBadge.style.fontSize = '12px';
+            statusBadge.style.fontWeight = '500';
+            if (data.status === 'completed') {
+                statusBadge.style.background = 'var(--accent-green-light)';
+                statusBadge.style.color = 'var(--accent-green)';
+            } else if (data.status === 'running') {
+                statusBadge.style.background = 'var(--accent-blue-light)';
+                statusBadge.style.color = 'var(--accent-blue)';
+            } else if (data.status === 'failed') {
+                statusBadge.style.background = 'var(--accent-red-light)';
+                statusBadge.style.color = 'var(--accent-red)';
+            }
+        } catch (error) {
+            console.error('Error loading detail:', error);
         }
-        
-        tbody.innerHTML = results.map(r => `
-            <tr style="border-top: 1px solid var(--border-light);">
-                <td style="padding: 16px;">
-                    <span class="text-mono" style="color: var(--accent-blue);">${escapeHtml(r.path)}</span>
-                </td>
-            </tr>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading results:', error);
-    }
-}
 
-loadDetail();
+        try {
+            var res = await fetch('/api/enum/fuzz/' + fuzzId + '/results');
+            var results = await res.json();
+
+            var tbody = document.getElementById('results-list');
+
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td style="padding: 40px; text-align: center; color: var(--text-tertiary);">No paths found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = results.map(function (r) {
+                return '<tr style="border-top: 1px solid var(--border-light);">'
+                    + '<td style="padding: 16px;"><span class="text-mono" style="color: var(--accent-blue);">' + escapeHtml(r.path) + '</span></td>'
+                    + '</tr>';
+            }).join('');
+        } catch (error) {
+            console.error('Error loading results:', error);
+        }
+    }
+
+    loadDetail();
 </script>
 {% endblock %}

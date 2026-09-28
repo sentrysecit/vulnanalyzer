@@ -277,3 +277,23 @@ def get_fuzz_results(fuzz_id: int, db: Session = Depends(get_db)):
 
     results = db.query(PathResult).filter(PathResult.fuzz_id == fuzz_id).all()
     return [PathResultResponse.model_validate(r) for r in results]
+
+
+@router.delete("/subdomain/{enum_id}", status_code=204)
+def delete_subdomain_enum(enum_id: int, db: Session = Depends(get_db)):
+    enum = db.query(SubdomainEnum).filter(SubdomainEnum.id == enum_id).first()
+    if not enum:
+        raise HTTPException(status_code=404, detail="Enumeration not found")
+    db.query(SubdomainResult).filter(SubdomainResult.enum_id == enum_id).delete()
+    db.delete(enum)
+    db.commit()
+
+
+@router.delete("/fuzz/{fuzz_id}", status_code=204)
+def delete_fuzz_job(fuzz_id: int, db: Session = Depends(get_db)):
+    fuzz = db.query(PathFuzz).filter(PathFuzz.id == fuzz_id).first()
+    if not fuzz:
+        raise HTTPException(status_code=404, detail="Fuzzing not found")
+    db.query(PathResult).filter(PathResult.fuzz_id == fuzz_id).delete()
+    db.delete(fuzz)
+    db.commit()
