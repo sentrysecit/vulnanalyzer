@@ -168,3 +168,5 @@ data
 .agents
 skills-lock.json
 AGENTS.md
+CLAUDE.md
+.claude/
