@@ -100,7 +100,8 @@ Form to:
 
 #### Report Viewer
 
-Displays generated reports with options to download in HTML or JSON format.
+Displays generated reports with options to download as a professional
+penetration-test **PDF**, or in HTML, Markdown, or JSON format.
 
 ---
 
@@ -201,7 +202,7 @@ Access the Swagger documentation at: <http://localhost:8000/docs>
 | GET | `/api/reports/{scan_id}` | Get report data (JSON) | ReportResponse |
 | GET | `/api/reports/{scan_id}/html` | Get report as HTML | HTMLResponse |
 | GET | `/api/reports/{scan_id}/preview` | Report preview (Jinja2 rendered) | HTMLResponse |
-| GET | `/api/reports/{scan_id}/download/{format}` | Download report (html/json/markdown) | FileResponse |
+| GET | `/api/reports/{scan_id}/download/{format}` | Download report (pdf/html/markdown/json) | FileResponse / Response |
 
 ### Enumeration Endpoints (`/api/enum`)
 
@@ -251,6 +252,12 @@ curl http://localhost:8000/api/scans/1
 
 ```bash
 curl http://localhost:8000/api/scans/stats
+```
+
+**Download a report (PDF — professional pentest report):**
+
+```bash
+curl -O http://localhost:8000/api/reports/1/download/pdf
 ```
 
 **Download a report (JSON):**
