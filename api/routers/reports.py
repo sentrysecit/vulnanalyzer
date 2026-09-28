@@ -89,9 +89,12 @@ def get_report_preview(scan_id: int, db: Session = Depends(get_db)):
     summary = report_service.generate_summary(scan.results or {})
 
     template_path = get_report_template_path()
-    from jinja2 import Environment, FileSystemLoader
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-    env = Environment(loader=FileSystemLoader(template_path))
+    env = Environment(
+        loader=FileSystemLoader(template_path),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
     template = env.get_template("reports/view.html")
 
     html_content = template.render(

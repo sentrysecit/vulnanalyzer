@@ -21,6 +21,27 @@ def _valid_host(host: str) -> bool:
         return bool(_HOSTNAME_RE.match(host))
 
 
+def _valid_scan_target(target: str) -> bool:
+    """A scan target is a single IP, a CIDR network, a hostname, or an
+    http(s) URL. This is also a security boundary: the value is passed to
+    nmap via python-nmap, which shlex-splits it into argv, so a value with
+    whitespace or a leading '-' could inject nmap arguments. Validating the
+    structure rejects both."""
+    # CIDR network (e.g. 192.168.1.0/24)
+    try:
+        ipaddress.ip_network(target, strict=False)
+        return True
+    except ValueError:
+        pass
+
+    # http(s) URL: validate the host part
+    if target.startswith(("http://", "https://")):
+        return _valid_host(urlparse(target).hostname or "")
+
+    # Single IP or hostname
+    return _valid_host(target)
+
+
 class ScanType(str, Enum):
     QUICK = "quick"
     FULL = "full"
@@ -38,6 +59,16 @@ class ScanStatus(str, Enum):
 class ScanBase(BaseModel):
     target: str
     scan_type: ScanType = ScanType.FULL
+
+    @field_validator("target")
+    @classmethod
+    def validate_target(cls, v: str) -> str:
+        v = v.strip()
+        if not _valid_scan_target(v):
+            raise ValueError(
+                "Invalid target: must be an IP, CIDR range, hostname, or http(s) URL"
+            )
+        return v
 
 
 class ScanCreate(ScanBase):

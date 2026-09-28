@@ -1,7 +1,7 @@
 import json
 import os
 import datetime
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 import weasyprint
 
 
@@ -12,7 +12,10 @@ class ReportGenerator:
         
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.template_dir = os.path.join(base_dir, "web", "templates", "reports")
-        self.env = Environment(loader=FileSystemLoader(self.template_dir))
+        self.env = Environment(
+            loader=FileSystemLoader(self.template_dir),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
 
     def generate_html_report(self, output_file):
         template = self.env.get_template("view.html")

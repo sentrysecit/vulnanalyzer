@@ -1,6 +1,6 @@
 import datetime
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 class ReportService:
@@ -8,7 +8,10 @@ class ReportService:
         self.timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         template_dir = os.path.join(base_dir, "web", "templates")
-        self.env = Environment(loader=FileSystemLoader(template_dir))
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
 
     def generate_summary(self, data: dict) -> dict:
         summary = {
